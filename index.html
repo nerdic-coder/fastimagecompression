@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Image Compression - Free Online Tool | fastimagecompression.com</title>
+    <meta name="description" content="Free online image compression tool at fastimagecompression.com. Compress photos, pictures, and images instantly. Reduce image size, compress JPEG, PNG, GIF files with our photo compressor.">
+    <meta name="keywords" content="image compression, photo compressor, picture compressor, pic compressor, compress gif, animated gif compressor, reduce image size, reduce picture size, lower image size, png compressor, minimize photo size, reduce image resolution, condense image, compress jpeg, compress jpg, fast image compression, online image compressor">
+    <meta name="author" content="Fast Image Compression">
+    <link rel="canonical" href="https://fastimagecompression.com">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <h1>FastImageCompression</h1>
+            </div>
+            <nav class="nav">
+                <a href="#home">Home</a>
+                <a href="privacy-policy.html">Privacy</a>
+                <a href="terms-of-service.html">Terms</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Ad Banner Top -->
+    <div class="ad-banner ad-top">
+        <div class="ad-placeholder">
+            <i class="fas fa-ad"></i>
+            <span>Advertisement</span>
+            <small>728x90</small>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h2>Free Online Image Compression Tool</h2>
+                <p>Compress photos, pictures, and images instantly. Reduce image size, compress JPEG, PNG, GIF files with our lightning-fast photo compressor. Minimize photo size without losing quality.</p>
+            </section>
+
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="upload-container">
+                    <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Drop your photos, pictures, or images here</h3>
+                        <p>or click to browse and compress JPEG, PNG, GIF files</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+                    </div>
+                    
+                    <!-- Compression Controls -->
+                    <div class="controls" id="controls" style="display: none;">
+                        <div class="control-group">
+                            <label for="qualitySlider">Compression Quality: <span id="qualityValue">80</span>%</label>
+                            <input type="range" id="qualitySlider" min="10" max="100" value="80" class="slider">
+                            <div class="slider-labels">
+                                <span>Smaller file size</span>
+                                <span>Better image quality</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="formatSelect">Output Format:</label>
+                            <select id="formatSelect">
+                                <option value="jpeg">JPEG</option>
+                                <option value="png">PNG</option>
+                                <option value="webp">WebP</option>
+                            </select>
+                        </div>
+                        
+                        <button id="compressBtn" class="btn btn-primary">
+                            <i class="fas fa-compress-alt"></i>
+                            Compress Image & Reduce Size
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sidebar Ad -->
+            <aside class="sidebar-ad">
+                <div class="ad-placeholder">
+                    <i class="fas fa-ad"></i>
+                    <span>Advertisement</span>
+                    <small>300x250</small>
+                </div>
+            </aside>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <h3>Image Compression Results</h3>
+                <div class="results-grid">
+                    <div class="result-card original">
+                        <h4>Original Photo</h4>
+                        <div class="image-container">
+                            <img id="originalImage" alt="Original image before compression">
+                        </div>
+                        <div class="file-info">
+                            <span class="file-size" id="originalSize">-</span>
+                            <span class="file-dimensions" id="originalDimensions">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card compressed">
+                        <h4>Compressed Picture</h4>
+                        <div class="image-container">
+                            <img id="compressedImage" alt="Compressed image after size reduction">
+                        </div>
+                        <div class="file-info">
+                            <span class="file-size" id="compressedSize">-</span>
+                            <span class="file-dimensions" id="compressedDimensions">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="compression-stats">
+                    <div class="stat">
+                        <span class="stat-label">Size Reduction:</span>
+                        <span class="stat-value" id="sizeReduction">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Compression Ratio:</span>
+                        <span class="stat-value" id="compressionRatio">-</span>
+                    </div>
+                </div>
+                
+                <div class="download-section">
+                    <button id="downloadBtn" class="btn btn-success">
+                        <i class="fas fa-download"></i>
+                        Download Compressed Image
+                    </button>
+                </div>
+            </section>
+
+            <!-- File Support Section -->
+            <section class="file-support">
+                <h3>Supported Image Formats & Compression Types</h3>
+                <div class="format-grid">
+                    <div class="format-card">
+                        <i class="fas fa-file-image"></i>
+                        <h4>JPEG Compressor</h4>
+                        <p>Compress JPEG and JPG files efficiently. Perfect for photos and digital images.</p>
+                    </div>
+                    <div class="format-card">
+                        <i class="fas fa-file-image"></i>
+                        <h4>PNG Compressor</h4>
+                        <p>Reduce PNG file size while maintaining transparency. Ideal for graphics and logos.</p>
+                    </div>
+                    <div class="format-card">
+                        <i class="fas fa-file-image"></i>
+                        <h4>GIF Compressor</h4>
+                        <p>Compress GIF and animated GIF files. Minimize animated image size without losing quality.</p>
+                    </div>
+                    <div class="format-card">
+                        <i class="fas fa-file-image"></i>
+                        <h4>WebP Compressor</h4>
+                        <p>Modern WebP format compression. Reduce image resolution and file size for web use.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="features">
+                <h3>Why Choose Our Photo Compressor & Image Compression Tool?</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Privacy First Image Processing</h4>
+                        <p>All compression happens in your browser. Your pictures never leave your device - complete privacy protection.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-bolt"></i>
+                        <h4>Ultra Fast Photo Compression</h4>
+                        <p>Compress images in milliseconds with our optimized compression engine. Reduce image size instantly.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-mobile-alt"></i>
+                        <h4>Mobile Picture Compressor</h4>
+                        <p>Works perfectly on all devices - desktop, tablet, and mobile. Compress pics anywhere, anytime.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-gift"></i>
+                        <h4>100% Free Image Size Reducer</h4>
+                        <p>No registration required. No hidden fees. Minimize photo size as much as you want - completely free.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer Ad -->
+    <div class="ad-banner ad-bottom">
+        <div class="ad-placeholder">
+            <i class="fas fa-ad"></i>
+            <span>Advertisement</span>
+            <small>728x90</small>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Fast Image Compression</h4>
+                    <p>The fastest online image compression tool. Compress images instantly without compromising quality.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <p>Need help? Contact us at support@fastimagecompression.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Fast Image Compression. All rights reserved. | fastimagecompression.com</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
