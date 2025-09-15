@@ -1,0 +1,5 @@
+# ads.txt file for fastimagecompression.com
+# This file authorizes digital sellers to sell ad inventory on this domain
+
+# Google AdSense
+google.com, pub-9903523261777140, DIRECT, f08c47fec0942fa0
