@@ -98,19 +98,27 @@
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
     
-    <!-- Fallback styles for Font Awesome icons while loading -->
+    <!-- Font Awesome loading optimization -->
     <style>
-        .fas, .fa { font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', sans-serif; }
-        /* Fallback icons using Unicode symbols */
-        .fa-bolt::before { content: '⚡'; }
-        .fa-cloud-upload-alt::before { content: '☁️'; }
-        .fa-compress-alt::before { content: '🗜️'; }
-        .fa-download::before { content: '⬇️'; }
-        .fa-ad::before { content: '📢'; }
-        .fa-file-image::before { content: '🖼️'; }
-        .fa-shield-alt::before { content: '🛡️'; }
-        .fa-mobile-alt::before { content: '📱'; }
-        .fa-gift::before { content: '🎁'; }
+        /* Ensure Font Awesome icons maintain proper styling */
+        .fas, .fa { 
+            font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', sans-serif; 
+            font-weight: 900;
+        }
+        /* Hide icons briefly while Font Awesome loads to prevent FOUC */
+        .fa-bolt, .fa-cloud-upload-alt, .fa-compress-alt, .fa-download, 
+        .fa-ad, .fa-file-image, .fa-shield-alt, .fa-mobile-alt, .fa-gift {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        /* Show icons once Font Awesome is loaded */
+        .fontawesome-loaded .fa-bolt, .fontawesome-loaded .fa-cloud-upload-alt, 
+        .fontawesome-loaded .fa-compress-alt, .fontawesome-loaded .fa-download, 
+        .fontawesome-loaded .fa-ad, .fontawesome-loaded .fa-file-image, 
+        .fontawesome-loaded .fa-shield-alt, .fontawesome-loaded .fa-mobile-alt, 
+        .fontawesome-loaded .fa-gift {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -333,6 +341,44 @@
         </div>
     </footer>
 
+    <!-- Font Awesome load detection script -->
+    <script>
+        // Detect when Font Awesome has loaded and show icons
+        function checkFontAwesomeLoaded() {
+            // Check if Font Awesome font is loaded
+            if (document.fonts && document.fonts.check) {
+                if (document.fonts.check('16px "Font Awesome 6 Free"')) {
+                    document.body.classList.add('fontawesome-loaded');
+                    return;
+                }
+            }
+            // Fallback: check if Font Awesome CSS is loaded by testing a specific icon
+            const testIcon = document.createElement('i');
+            testIcon.className = 'fas fa-bolt';
+            testIcon.style.position = 'absolute';
+            testIcon.style.left = '-9999px';
+            document.body.appendChild(testIcon);
+            
+            const computedStyle = window.getComputedStyle(testIcon, '::before');
+            const content = computedStyle.getPropertyValue('content');
+            document.body.removeChild(testIcon);
+            
+            if (content && content !== 'none' && content !== '""') {
+                document.body.classList.add('fontawesome-loaded');
+            } else {
+                // Retry after a short delay
+                setTimeout(checkFontAwesomeLoaded, 100);
+            }
+        }
+        
+        // Start checking when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkFontAwesomeLoaded);
+        } else {
+            checkFontAwesomeLoaded();
+        }
+    </script>
+    
     <!-- Load JavaScript asynchronously for better performance -->
     <script src="script.js" defer></script>
 </body>
