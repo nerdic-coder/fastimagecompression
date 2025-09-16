@@ -46,9 +46,72 @@
     <meta property="twitter:description" content="Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size, compress JPEG, PNG, GIF files with our photo compressor.">
     <meta property="twitter:image" content="https://fastimagecompression.com/apple-touch-icon.png">
     
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DNS prefetch for faster external resource loading -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//www.googletagmanager.com">
+    <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
+    
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Critical CSS inlined for above-the-fold content -->
+    <style>
+        /* Critical CSS for above-the-fold content */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; line-height: 1.6; color: #333; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100; }
+        .header .container { display: flex; justify-content: space-between; align-items: center; padding: 1rem 20px; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; }
+        .logo i { font-size: 1.5rem; color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+        .logo h1 { font-size: 1.5rem; font-weight: 700; color: #333; }
+        .nav { display: flex; gap: 2rem; }
+        .nav a { text-decoration: none; color: #666; font-weight: 500; transition: color 0.3s ease; }
+        .nav a:hover { color: #667eea; }
+        .main { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); margin: 2rem auto; border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); overflow: hidden; position: relative; }
+        .main .container { padding: 3rem 20px; }
+        .hero { text-align: center; margin-bottom: 3rem; }
+        .hero h2 { font-size: 2.5rem; font-weight: 700; color: #333; margin-bottom: 1rem; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
+        .upload-section { position: relative; margin-bottom: 3rem; }
+        .upload-container { max-width: 600px; margin: 0 auto; }
+        .upload-area { border: 3px dashed #667eea; border-radius: 20px; padding: 3rem 2rem; text-align: center; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05)); cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .upload-area:hover { border-color: #764ba2; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); transform: translateY(-2px); }
+        .upload-content i { font-size: 3rem; color: #667eea; margin-bottom: 1rem; }
+        .upload-content h3 { font-size: 1.5rem; font-weight: 600; color: #333; margin-bottom: 0.5rem; }
+        .upload-content p { color: #666; font-size: 1rem; }
+    </style>
+    
+    <!-- Load non-critical CSS asynchronously -->
+    <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    
+    <!-- Load Font Awesome asynchronously -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></noscript>
+    
+    <!-- Fallback styles for Font Awesome icons while loading -->
+    <style>
+        .fas, .fa { font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Brands', sans-serif; }
+        /* Fallback icons using Unicode symbols */
+        .fa-bolt::before { content: '⚡'; }
+        .fa-cloud-upload-alt::before { content: '☁️'; }
+        .fa-compress-alt::before { content: '🗜️'; }
+        .fa-download::before { content: '⬇️'; }
+        .fa-ad::before { content: '📢'; }
+        .fa-file-image::before { content: '🖼️'; }
+        .fa-shield-alt::before { content: '🛡️'; }
+        .fa-mobile-alt::before { content: '📱'; }
+        .fa-gift::before { content: '🎁'; }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -270,6 +333,7 @@
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Load JavaScript asynchronously for better performance -->
+    <script src="script.js" defer></script>
 </body>
 </html>
