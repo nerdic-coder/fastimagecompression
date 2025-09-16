@@ -18,7 +18,7 @@ self.addEventListener('message', (event) => {
     
     switch (type) {
         case 'COMPRESS_IMAGE':
-            handleImageCompression(data, id);
+            handleImageCompression(data, id, event);
             break;
         default:
             console.log('Unknown message type:', type);
@@ -26,7 +26,7 @@ self.addEventListener('message', (event) => {
 });
 
 // Image compression handler
-async function handleImageCompression(data, id) {
+async function handleImageCompression(data, id, event) {
     try {
         const { imageData, width, height, quality, format } = data;
         
@@ -40,24 +40,50 @@ async function handleImageCompression(data, id) {
         // Compress the image
         const compressedData = await compressImageInWorker(imgData, quality, format);
         
-        // Send result back to main thread
-        self.postMessage({
-            type: 'COMPRESSION_COMPLETE',
-            id: id,
-            success: true,
-            data: compressedData
-        });
+        // Send result back to main thread using MessagePort
+        if (event.ports && event.ports[0]) {
+            event.ports[0].postMessage({
+                type: 'COMPRESSION_COMPLETE',
+                id: id,
+                success: true,
+                data: compressedData
+            });
+        } else {
+            // Fallback: get all clients and post to them
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'COMPRESSION_COMPLETE',
+                    id: id,
+                    success: true,
+                    data: compressedData
+                });
+            });
+        }
         
     } catch (error) {
         console.error('Compression error in Service Worker:', error);
         
-        // Send error back to main thread
-        self.postMessage({
-            type: 'COMPRESSION_COMPLETE',
-            id: id,
-            success: false,
-            error: error.message
-        });
+        // Send error back to main thread using MessagePort
+        if (event.ports && event.ports[0]) {
+            event.ports[0].postMessage({
+                type: 'COMPRESSION_COMPLETE',
+                id: id,
+                success: false,
+                error: error.message
+            });
+        } else {
+            // Fallback: get all clients and post to them
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'COMPRESSION_COMPLETE',
+                    id: id,
+                    success: false,
+                    error: error.message
+                });
+            });
+        }
     }
 }
 
