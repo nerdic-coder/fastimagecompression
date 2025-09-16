@@ -10,9 +10,6 @@ class ImageCompressor {
         this.ctx = null;
         this.isProcessing = false;
         this.isBatchProcessing = false;
-        this.serviceWorker = null;
-        this.messageId = 0;
-        this.pendingCompressions = new Map();
         this.batchProgress = {
             current: 0,
             total: 0,
@@ -30,23 +27,8 @@ class ImageCompressor {
         this.initializeElements();
         this.bindEvents();
         this.preCreateCanvas();
-        this.initializeServiceWorker();
     }
     
-    async initializeServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            try {
-                const registration = await navigator.serviceWorker.register('/sw.js');
-                this.serviceWorker = registration.active || registration.waiting || registration.installing;
-                
-                console.log('Service Worker registered successfully');
-            } catch (error) {
-                console.log('Service Worker registration failed:', error);
-                // Fallback to main thread compression
-            }
-        }
-    }
-
     initializeElements() {
         // Cache DOM elements to reduce repeated queries
         this.elements = {
@@ -366,13 +348,9 @@ class ImageCompressor {
             const quality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
             
-            // Try Service Worker compression first, fallback to main thread
+            // Use main thread compression only (Service Worker disabled)
             let compressedDataUrl;
-            if (this.serviceWorker) {
-                compressedDataUrl = await this.compressImageWithServiceWorker(this.originalImage, quality, format);
-            } else {
-                compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
-            }
+            compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
             
             // Create compressed image object
             const compressedImg = new Image();
@@ -449,12 +427,9 @@ class ImageCompressor {
             const img = new Image();
             img.onload = async () => {
                 try {
+                    // Use main thread compression only (Service Worker disabled)
                     let compressedDataUrl;
-                    if (this.serviceWorker) {
-                        compressedDataUrl = await this.compressImageWithServiceWorker(img, quality, format);
-                    } else {
-                        compressedDataUrl = await this.compressImageWithIdleCallback(img, quality, format);
-                    }
+                    compressedDataUrl = await this.compressImageWithIdleCallback(img, quality, format);
                     
                     const compressedImg = new Image();
                     compressedImg.onload = () => {
@@ -480,62 +455,6 @@ class ImageCompressor {
             };
             
             img.src = URL.createObjectURL(file);
-        });
-    }
-    
-    // Compress image using Service Worker (non-blocking)
-    async compressImageWithServiceWorker(image, quality, format) {
-        return new Promise((resolve, reject) => {
-            // Get image data from canvas
-            this.canvas.width = image.width;
-            this.canvas.height = image.height;
-            this.ctx.drawImage(image, 0, 0);
-            
-            const imageData = this.ctx.getImageData(0, 0, image.width, image.height);
-            
-            // Generate unique message ID
-            const messageId = ++this.messageId;
-            
-            // Send compression request to Service Worker using MessagePort
-            if (this.serviceWorker) {
-                const messageChannel = new MessageChannel();
-                
-                // Listen for response on port1
-                messageChannel.port1.onmessage = (event) => {
-                    const { type, id, success, data: resultData, error } = event.data;
-                    if (type === 'COMPRESSION_COMPLETE' && id === messageId) {
-                        if (success) {
-                            // Convert ArrayBuffer back to data URL
-                            const blob = new Blob([new Uint8Array(resultData.data)], { type: resultData.mimeType });
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result);
-                            reader.readAsDataURL(blob);
-                        } else {
-                            reject(new Error(error));
-                        }
-                    }
-                };
-                
-                // Send message with port2
-                this.serviceWorker.postMessage({
-                    type: 'COMPRESS_IMAGE',
-                    id: messageId,
-                    data: {
-                        imageData: imageData.data,
-                        width: image.width,
-                        height: image.height,
-                        quality: quality,
-                        format: format
-                    }
-                }, [messageChannel.port2]);
-            } else {
-                reject(new Error('Service Worker not available'));
-            }
-            
-            // Timeout after 30 seconds
-            setTimeout(() => {
-                reject(new Error('Compression timeout'));
-            }, 30000);
         });
     }
     
