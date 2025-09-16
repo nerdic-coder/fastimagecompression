@@ -10,6 +10,7 @@ class ImageCompressor {
         this.ctx = null;
         this.isProcessing = false;
         this.isBatchProcessing = false;
+        this.isFileInputTriggered = false; // Flag to prevent infinite loops
         this.batchProgress = {
             current: 0,
             total: 0,
@@ -27,6 +28,73 @@ class ImageCompressor {
         this.initializeElements();
         this.bindEvents();
         this.preCreateCanvas();
+        this.detectSafariAndApplyFixes();
+    }
+    
+    detectSafariAndApplyFixes() {
+        // Detect Safari iOS and apply specific fixes
+        const isSafariIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+        
+        if (isSafariIOS) {
+            console.log('Safari iOS detected, applying compatibility fixes');
+            
+            // Add additional event listeners for Safari iOS
+            const { uploadArea, fileInput } = this.elements;
+            
+            // Add gesturestart event for Safari iOS
+            uploadArea.addEventListener('gesturestart', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+            
+            // Ensure file input is visible to Safari (sometimes needed)
+            fileInput.style.position = 'absolute';
+            fileInput.style.left = '-9999px';
+            fileInput.style.opacity = '0';
+            fileInput.style.pointerEvents = 'none';
+            
+            // Add a fallback button for Safari iOS if needed
+            this.addSafariFallbackButton();
+        }
+    }
+    
+    addSafariFallbackButton() {
+        // Add a visible file input button as fallback for Safari iOS
+        const { uploadArea } = this.elements;
+        
+        const fallbackButton = document.createElement('button');
+        fallbackButton.type = 'button';
+        fallbackButton.className = 'btn btn-primary safari-fallback-btn';
+        fallbackButton.innerHTML = '<i class="fas fa-camera"></i> Choose Photos';
+        fallbackButton.style.cssText = `
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            padding: 0.75rem 1.5rem;
+        `;
+        
+        fallbackButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Prevent infinite loop
+            if (this.isFileInputTriggered) {
+                return;
+            }
+            
+            this.isFileInputTriggered = true;
+            
+            try {
+                this.elements.fileInput.click();
+                console.log('File input clicked from Safari fallback button');
+            } catch (error) {
+                console.error('Error from Safari fallback button:', error);
+            } finally {
+                setTimeout(() => {
+                    this.isFileInputTriggered = false;
+                }, 100);
+            }
+        });
+        
+        uploadArea.appendChild(fallbackButton);
     }
     
     initializeElements() {
@@ -77,9 +145,79 @@ class ImageCompressor {
         // Use passive listeners where possible for better performance
         const options = { passive: true };
         
-        // Upload events
-        uploadArea.addEventListener('click', () => fileInput.click(), options);
+        // Upload events - Enhanced for Safari iOS 18 compatibility
+        uploadArea.addEventListener('click', (e) => {
+            // Prevent infinite loop by checking if the click originated from file input
+            if (e.target === fileInput || e.target.closest('input[type="file"]') || this.isFileInputTriggered) {
+                return;
+            }
+            
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Upload area clicked, triggering file input');
+            
+            // Set flag to prevent multiple triggers
+            this.isFileInputTriggered = true;
+            
+            // Ensure file input is properly triggered on Safari iOS
+            setTimeout(() => {
+                try {
+                    fileInput.click();
+                    console.log('File input click triggered');
+                } catch (error) {
+                    console.error('Error triggering file input:', error);
+                    this.showError('Unable to open file picker. Please try the "Choose Photos" button below.');
+                } finally {
+                    // Reset flag after a short delay
+                    setTimeout(() => {
+                        this.isFileInputTriggered = false;
+                    }, 100);
+                }
+            }, 0);
+        }, false);
+        
+        // Add touch events for mobile Safari
+        uploadArea.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+        
+        uploadArea.addEventListener('touchend', (e) => {
+            // Prevent infinite loop
+            if (this.isFileInputTriggered) {
+                return;
+            }
+            
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Upload area touched, triggering file input');
+            
+            // Set flag to prevent multiple triggers
+            this.isFileInputTriggered = true;
+            
+            // Trigger file input on touch end for mobile Safari
+            setTimeout(() => {
+                try {
+                    fileInput.click();
+                    console.log('File input click triggered from touch');
+                } catch (error) {
+                    console.error('Error triggering file input from touch:', error);
+                    this.showError('Unable to open file picker. Please try the "Choose Photos" button below.');
+                } finally {
+                    // Reset flag after a short delay
+                    setTimeout(() => {
+                        this.isFileInputTriggered = false;
+                    }, 100);
+                }
+            }, 0);
+        }, { passive: false });
+        
         fileInput.addEventListener('change', (e) => this.handleFileSelect(e), options);
+        
+        // Prevent file input click from bubbling up to upload area
+        fileInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('File input clicked directly');
+        }, false);
         
         // Drag and drop events
         uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
@@ -129,8 +267,14 @@ class ImageCompressor {
 
     handleFileSelect(e) {
         const files = Array.from(e.target.files);
+        console.log('Files selected:', files.length, 'files');
+        
         if (files.length > 0) {
             this.processFiles(files);
+        } else {
+            console.log('No files selected or files not accessible');
+            // Try to reset the file input for Safari iOS
+            e.target.value = '';
         }
     }
 
