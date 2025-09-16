@@ -194,6 +194,14 @@ body {
     font-size: 1rem;
 }
 
+.multi-file-hint {
+    display: block;
+    color: #667eea;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
 /* Controls */
 .controls {
     margin-top: 2rem;
@@ -201,6 +209,118 @@ body {
     background: #f8f9fa;
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Progress Section */
+.progress-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.progress-section h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.progress-overview {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.image-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.image-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.image-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.image-item-info {
+    flex: 1;
+    min-width: 0; /* Allow text to wrap */
+}
+
+.image-item-name {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.image-item-size {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.image-item-status {
+    margin-left: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.image-item-status.processing {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.image-item-status.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.image-item-status.error {
+    background: #f8d7da;
+    color: #721c24;
 }
 
 .control-group {
@@ -408,6 +528,103 @@ select:focus {
     text-align: center;
 }
 
+/* Batch Results */
+.batch-summary {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.batch-summary h4 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.summary-stat {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #28a745;
+}
+
+.batch-image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.batch-image-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.batch-image-card img {
+    width: 100%;
+    max-width: 200px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.batch-image-card h5 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
+}
+
+.batch-image-stats {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.75rem;
+}
+
+.batch-image-download {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.batch-download-section {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e9ecef;
+}
+
 /* File Support Section */
 .file-support {
     margin: 3rem 0;
@@ -599,6 +816,16 @@ select:focus {
         max-width: 100%;
         margin: 1rem;
     }
+    
+    .batch-image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .batch-image-card img {
+        height: 110px;
+        max-width: 180px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -620,6 +847,29 @@ select:focus {
     
     .results-section {
         padding: 1.5rem;
+    }
+    
+    .batch-image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .batch-image-card {
+        padding: 0.75rem;
+    }
+    
+    .batch-image-card img {
+        height: 100px;
+        max-width: 150px;
+    }
+    
+    .image-item {
+        padding: 0.5rem;
+    }
+    
+    .image-item img {
+        width: 35px;
+        height: 35px;
     }
 }
 

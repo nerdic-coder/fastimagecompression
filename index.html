@@ -204,7 +204,8 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <h3>Drop your photos, pictures, or images here</h3>
                         <p>or click to browse and compress JPEG, PNG, GIF files</p>
-                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <small class="multi-file-hint">You can select multiple images at once!</small>
+                        <input type="file" id="fileInput" accept="image/*" multiple hidden>
                     </div>
                     </div>
                     
@@ -230,8 +231,24 @@
                         
                         <button id="compressBtn" class="btn btn-primary">
                             <i class="fas fa-compress-alt"></i>
-                            Compress Image & Reduce Size
+                            <span id="compressBtnText">Compress Image & Reduce Size</span>
                         </button>
+                        
+                    </div>
+                    
+                    <!-- Progress Section -->
+                    <div class="progress-section" id="progressSection" style="display: none;">
+                        <h4>Compression Progress</h4>
+                        <div class="progress-overview">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span id="progressText">0 of 0 images processed</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                        </div>
+                        <div class="image-list" id="imageList"></div>
                     </div>
                 </div>
             </section>
@@ -248,46 +265,80 @@
             <!-- Results Section -->
             <section class="results-section" id="resultsSection" style="display: none;">
                 <h3>Image Compression Results</h3>
-                <div class="results-grid">
-                    <div class="result-card original">
-                        <h4>Original Photo</h4>
-                        <div class="image-container">
-                            <img id="originalImage" alt="Original image before compression">
+                
+                <!-- Single Image Results -->
+                <div class="single-results" id="singleResults">
+                    <div class="results-grid">
+                        <div class="result-card original">
+                            <h4>Original Photo</h4>
+                            <div class="image-container">
+                                <img id="originalImage" alt="Original image before compression">
+                            </div>
+                            <div class="file-info">
+                                <span class="file-size" id="originalSize">-</span>
+                                <span class="file-dimensions" id="originalDimensions">-</span>
+                            </div>
                         </div>
-                        <div class="file-info">
-                            <span class="file-size" id="originalSize">-</span>
-                            <span class="file-dimensions" id="originalDimensions">-</span>
+                        
+                        <div class="result-card compressed">
+                            <h4>Compressed Picture</h4>
+                            <div class="image-container">
+                                <img id="compressedImage" alt="Compressed image after size reduction">
+                            </div>
+                            <div class="file-info">
+                                <span class="file-size" id="compressedSize">-</span>
+                                <span class="file-dimensions" id="compressedDimensions">-</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="result-card compressed">
-                        <h4>Compressed Picture</h4>
-                        <div class="image-container">
-                            <img id="compressedImage" alt="Compressed image after size reduction">
+                    <div class="compression-stats">
+                        <div class="stat">
+                            <span class="stat-label">Size Reduction:</span>
+                            <span class="stat-value" id="sizeReduction">-</span>
                         </div>
-                        <div class="file-info">
-                            <span class="file-size" id="compressedSize">-</span>
-                            <span class="file-dimensions" id="compressedDimensions">-</span>
+                        <div class="stat">
+                            <span class="stat-label">Compression Ratio:</span>
+                            <span class="stat-value" id="compressionRatio">-</span>
                         </div>
+                    </div>
+                    
+                    <div class="download-section">
+                        <button id="downloadBtn" class="btn btn-success">
+                            <i class="fas fa-download"></i>
+                            Download Compressed Image
+                        </button>
                     </div>
                 </div>
                 
-                <div class="compression-stats">
-                    <div class="stat">
-                        <span class="stat-label">Size Reduction:</span>
-                        <span class="stat-value" id="sizeReduction">-</span>
+                <!-- Batch Results -->
+                <div class="batch-results" id="batchResults" style="display: none;">
+                    <div class="batch-summary">
+                        <h4>Batch Compression Summary</h4>
+                        <div class="summary-stats">
+                            <div class="summary-stat">
+                                <span class="summary-label">Total Images:</span>
+                                <span class="summary-value" id="totalImages">0</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="summary-label">Total Size Reduction:</span>
+                                <span class="summary-value" id="totalSizeReduction">-</span>
+                            </div>
+                            <div class="summary-stat">
+                                <span class="summary-label">Average Compression:</span>
+                                <span class="summary-value" id="averageCompression">-</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat">
-                        <span class="stat-label">Compression Ratio:</span>
-                        <span class="stat-value" id="compressionRatio">-</span>
+                    
+                    <div class="batch-image-grid" id="batchImageGrid"></div>
+                    
+                    <div class="batch-download-section">
+                        <button id="downloadAllBtn" class="btn btn-success" style="display: none;">
+                            <i class="fas fa-download"></i>
+                            Download All Compressed Images
+                        </button>
                     </div>
-                </div>
-                
-                <div class="download-section">
-                    <button id="downloadBtn" class="btn btn-success">
-                        <i class="fas fa-download"></i>
-                        Download Compressed Image
-                    </button>
                 </div>
             </section>
 
@@ -456,6 +507,9 @@
             checkFontAwesomeLoaded();
         }
     </script>
+    
+    <!-- Load JSZip library for ZIP download functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
     
     <!-- Load JavaScript asynchronously for better performance -->
     <script src="script.js" defer></script>
