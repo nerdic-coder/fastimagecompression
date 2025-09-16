@@ -6,6 +6,15 @@ class ImageCompressor {
         this.compressedImage = null;
         this.canvas = null;
         this.ctx = null;
+        this.isProcessing = false;
+        
+        // Defer heavy initialization
+        requestIdleCallback ? 
+            requestIdleCallback(() => this.initialize()) :
+            setTimeout(() => this.initialize(), 0);
+    }
+    
+    initialize() {
         this.initializeElements();
         this.bindEvents();
         this.preCreateCanvas();
@@ -43,19 +52,36 @@ class ImageCompressor {
     bindEvents() {
         const { uploadArea, fileInput, qualitySlider, compressBtn, downloadBtn } = this.elements;
         
+        // Use passive listeners where possible for better performance
+        const options = { passive: true };
+        
         // Upload events
-        uploadArea.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        uploadArea.addEventListener('click', () => fileInput.click(), options);
+        fileInput.addEventListener('change', (e) => this.handleFileSelect(e), options);
         
         // Drag and drop events
         uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
         uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
         uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
         
-        // Control events
-        qualitySlider.addEventListener('input', (e) => this.updateQualityValue(e));
-        compressBtn.addEventListener('click', () => this.compressImage());
-        downloadBtn.addEventListener('click', () => this.downloadCompressedImage());
+        // Control events with throttling
+        qualitySlider.addEventListener('input', this.throttle((e) => this.updateQualityValue(e), 16), options);
+        compressBtn.addEventListener('click', () => this.compressImage(), options);
+        downloadBtn.addEventListener('click', () => this.downloadCompressedImage(), options);
+    }
+    
+    // Throttle function to reduce event handler frequency
+    throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
     }
 
     handleDragOver(e) {
@@ -140,11 +166,12 @@ class ImageCompressor {
     }
 
     async compressImage() {
-        if (!this.originalImage) {
-            this.showError('Please select an image first.');
+        if (!this.originalImage || this.isProcessing) {
+            if (!this.originalImage) this.showError('Please select an image first.');
             return;
         }
 
+        this.isProcessing = true;
         const { compressBtn, qualitySlider, formatSelect } = this.elements;
         
         // Show loading state
@@ -155,14 +182,8 @@ class ImageCompressor {
             const quality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
             
-            // Use requestIdleCallback for better performance if available
-            const compressTask = () => this.compressImageData(this.originalImage, quality, format);
-            
-            const compressedDataUrl = window.requestIdleCallback ? 
-                await new Promise(resolve => {
-                    window.requestIdleCallback(() => resolve(compressTask()));
-                }) : 
-                await compressTask();
+            // Use multiple idle callbacks to break up work
+            const compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
             
             // Create compressed image object
             const compressedImg = new Image();
@@ -170,6 +191,7 @@ class ImageCompressor {
                 this.compressedImage = compressedImg;
                 this.displayResults(compressedDataUrl);
                 this.resetCompressButton();
+                this.isProcessing = false;
             };
             compressedImg.src = compressedDataUrl;
             
@@ -177,7 +199,27 @@ class ImageCompressor {
             console.error('Compression error:', error);
             this.showError('Failed to compress image. Please try again.');
             this.resetCompressButton();
+            this.isProcessing = false;
         }
+    }
+    
+    // Break compression into smaller chunks using idle callbacks
+    compressImageWithIdleCallback(image, quality, format) {
+        return new Promise((resolve) => {
+            if (window.requestIdleCallback) {
+                // Use idle callback to avoid blocking main thread
+                window.requestIdleCallback(() => {
+                    const result = this.compressImageData(image, quality, format);
+                    resolve(result);
+                }, { timeout: 5000 });
+            } else {
+                // Fallback for browsers without requestIdleCallback
+                setTimeout(() => {
+                    const result = this.compressImageData(image, quality, format);
+                    resolve(result);
+                }, 0);
+            }
+        });
     }
 
     compressImageData(image, quality, format) {
@@ -288,36 +330,66 @@ class ImageCompressor {
     }
 
     showError(message) {
-        // Create error notification
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-notification';
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #dc3545;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-        `;
-        errorDiv.textContent = message;
-        
-        document.body.appendChild(errorDiv);
-        
-        // Remove after 5 seconds
-        setTimeout(() => {
-            errorDiv.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => {
-                document.body.removeChild(errorDiv);
-            }, 300);
-        }, 5000);
+        // Use requestAnimationFrame to avoid blocking main thread
+        requestAnimationFrame(() => {
+            // Create error notification
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-notification';
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #dc3545;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            errorDiv.textContent = message;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Remove after 5 seconds using idle callback
+            const removeError = () => {
+                errorDiv.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        document.body.removeChild(errorDiv);
+                    }
+                }, 300);
+            };
+            
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(() => {
+                    setTimeout(removeError, 5000);
+                });
+            } else {
+                setTimeout(removeError, 5000);
+            }
+        });
     }
 }
 
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new ImageCompressor();
-});
+// Optimized initialization with minimal main-thread impact
+function initializeApp() {
+    // Use requestIdleCallback for initialization if available
+    if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+            new ImageCompressor();
+        }, { timeout: 2000 });
+    } else {
+        // Fallback: use setTimeout to defer initialization
+        setTimeout(() => {
+            new ImageCompressor();
+        }, 0);
+    }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
