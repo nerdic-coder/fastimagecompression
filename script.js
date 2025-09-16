@@ -1,67 +1,76 @@
-// Image Compression App
+// Image Compression App - Optimized for Performance
 class ImageCompressor {
     constructor() {
         this.originalFile = null;
         this.originalImage = null;
         this.compressedImage = null;
+        this.canvas = null;
+        this.ctx = null;
         this.initializeElements();
         this.bindEvents();
+        this.preCreateCanvas();
     }
 
     initializeElements() {
-        // Upload elements
-        this.uploadArea = document.getElementById('uploadArea');
-        this.fileInput = document.getElementById('fileInput');
-        this.controls = document.getElementById('controls');
-        
-        // Control elements
-        this.qualitySlider = document.getElementById('qualitySlider');
-        this.qualityValue = document.getElementById('qualityValue');
-        this.formatSelect = document.getElementById('formatSelect');
-        this.compressBtn = document.getElementById('compressBtn');
-        
-        // Results elements
-        this.resultsSection = document.getElementById('resultsSection');
-        this.originalImageEl = document.getElementById('originalImage');
-        this.compressedImageEl = document.getElementById('compressedImage');
-        this.originalSize = document.getElementById('originalSize');
-        this.compressedSize = document.getElementById('compressedSize');
-        this.originalDimensions = document.getElementById('originalDimensions');
-        this.compressedDimensions = document.getElementById('compressedDimensions');
-        this.sizeReduction = document.getElementById('sizeReduction');
-        this.compressionRatio = document.getElementById('compressionRatio');
-        this.downloadBtn = document.getElementById('downloadBtn');
+        // Cache DOM elements to reduce repeated queries
+        this.elements = {
+            uploadArea: document.getElementById('uploadArea'),
+            fileInput: document.getElementById('fileInput'),
+            controls: document.getElementById('controls'),
+            qualitySlider: document.getElementById('qualitySlider'),
+            qualityValue: document.getElementById('qualityValue'),
+            formatSelect: document.getElementById('formatSelect'),
+            compressBtn: document.getElementById('compressBtn'),
+            resultsSection: document.getElementById('resultsSection'),
+            originalImageEl: document.getElementById('originalImage'),
+            compressedImageEl: document.getElementById('compressedImage'),
+            originalSize: document.getElementById('originalSize'),
+            compressedSize: document.getElementById('compressedSize'),
+            originalDimensions: document.getElementById('originalDimensions'),
+            compressedDimensions: document.getElementById('compressedDimensions'),
+            sizeReduction: document.getElementById('sizeReduction'),
+            compressionRatio: document.getElementById('compressionRatio'),
+            downloadBtn: document.getElementById('downloadBtn')
+        };
+    }
+
+    preCreateCanvas() {
+        // Pre-create canvas to avoid creating it during compression
+        this.canvas = document.createElement('canvas');
+        this.ctx = this.canvas.getContext('2d');
     }
 
     bindEvents() {
+        const { uploadArea, fileInput, qualitySlider, compressBtn, downloadBtn } = this.elements;
+        
         // Upload events
-        this.uploadArea.addEventListener('click', () => this.fileInput.click());
-        this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
         
         // Drag and drop events
-        this.uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
-        this.uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-        this.uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
+        uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
+        uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+        uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
         
         // Control events
-        this.qualitySlider.addEventListener('input', (e) => this.updateQualityValue(e));
-        this.compressBtn.addEventListener('click', () => this.compressImage());
-        this.downloadBtn.addEventListener('click', () => this.downloadCompressedImage());
+        qualitySlider.addEventListener('input', (e) => this.updateQualityValue(e));
+        compressBtn.addEventListener('click', () => this.compressImage());
+        downloadBtn.addEventListener('click', () => this.downloadCompressedImage());
     }
 
     handleDragOver(e) {
         e.preventDefault();
-        this.uploadArea.classList.add('dragover');
+        this.elements.uploadArea.classList.add('dragover');
     }
 
     handleDragLeave(e) {
         e.preventDefault();
-        this.uploadArea.classList.remove('dragover');
+        this.elements.uploadArea.classList.remove('dragover');
     }
 
     handleDrop(e) {
         e.preventDefault();
-        this.uploadArea.classList.remove('dragover');
+        this.elements.uploadArea.classList.remove('dragover');
         
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -107,28 +116,27 @@ class ImageCompressor {
     }
 
     showControls() {
-        this.controls.style.display = 'block';
-        this.resultsSection.style.display = 'none';
+        const { controls, resultsSection } = this.elements;
+        controls.style.display = 'block';
+        resultsSection.style.display = 'none';
         
-        // Add animation
-        this.controls.style.opacity = '0';
-        this.controls.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            this.controls.style.transition = 'all 0.3s ease';
-            this.controls.style.opacity = '1';
-            this.controls.style.transform = 'translateY(0)';
-        }, 100);
+        // Use requestAnimationFrame for smoother animations
+        requestAnimationFrame(() => {
+            controls.style.transition = 'all 0.3s ease';
+            controls.style.opacity = '1';
+            controls.style.transform = 'translateY(0)';
+        });
     }
 
     displayOriginalImage() {
-        this.originalImageEl.src = this.originalImage.src;
-        this.originalSize.textContent = this.formatFileSize(this.originalFile.size);
-        this.originalDimensions.textContent = `${this.originalImage.width} × ${this.originalImage.height}`;
+        const { originalImageEl, originalSize, originalDimensions } = this.elements;
+        originalImageEl.src = this.originalImage.src;
+        originalSize.textContent = this.formatFileSize(this.originalFile.size);
+        originalDimensions.textContent = `${this.originalImage.width} × ${this.originalImage.height}`;
     }
 
     updateQualityValue(e) {
-        this.qualityValue.textContent = e.target.value;
+        this.elements.qualityValue.textContent = e.target.value;
     }
 
     async compressImage() {
@@ -137,16 +145,24 @@ class ImageCompressor {
             return;
         }
 
+        const { compressBtn, qualitySlider, formatSelect } = this.elements;
+        
         // Show loading state
-        this.compressBtn.innerHTML = '<div class="loading"></div> Compressing...';
-        this.compressBtn.disabled = true;
+        compressBtn.innerHTML = '<div class="loading"></div> Compressing...';
+        compressBtn.disabled = true;
 
         try {
-            const quality = parseInt(this.qualitySlider.value) / 100;
-            const format = this.formatSelect.value;
+            const quality = parseInt(qualitySlider.value) / 100;
+            const format = formatSelect.value;
             
-            // Compress image
-            const compressedDataUrl = await this.compressImageData(this.originalImage, quality, format);
+            // Use requestIdleCallback for better performance if available
+            const compressTask = () => this.compressImageData(this.originalImage, quality, format);
+            
+            const compressedDataUrl = window.requestIdleCallback ? 
+                await new Promise(resolve => {
+                    window.requestIdleCallback(() => resolve(compressTask()));
+                }) : 
+                await compressTask();
             
             // Create compressed image object
             const compressedImg = new Image();
@@ -166,61 +182,61 @@ class ImageCompressor {
 
     compressImageData(image, quality, format) {
         return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas dimensions
-            canvas.width = image.width;
-            canvas.height = image.height;
+            // Use pre-created canvas to avoid DOM creation overhead
+            this.canvas.width = image.width;
+            this.canvas.height = image.height;
             
             // Draw image on canvas
-            ctx.drawImage(image, 0, 0);
+            this.ctx.drawImage(image, 0, 0);
             
             // Convert to desired format
-            let mimeType = 'image/jpeg';
-            if (format === 'png') {
-                mimeType = 'image/png';
-            } else if (format === 'webp') {
-                mimeType = 'image/webp';
-            }
+            const mimeTypes = {
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'webp': 'image/webp'
+            };
+            const mimeType = mimeTypes[format] || 'image/jpeg';
             
             // Generate compressed data URL
-            const dataUrl = canvas.toDataURL(mimeType, quality);
+            const dataUrl = this.canvas.toDataURL(mimeType, quality);
             resolve(dataUrl);
         });
     }
 
     displayResults(compressedDataUrl) {
+        const { 
+            compressedImageEl, compressedDimensions, compressedSize, 
+            sizeReduction, compressionRatio, resultsSection 
+        } = this.elements;
+        
         // Display compressed image
-        this.compressedImageEl.src = compressedDataUrl;
-        this.compressedDimensions.textContent = `${this.compressedImage.width} × ${this.compressedImage.height}`;
+        compressedImageEl.src = compressedDataUrl;
+        compressedDimensions.textContent = `${this.compressedImage.width} × ${this.compressedImage.height}`;
         
         // Calculate file sizes
         const originalSize = this.originalFile.size;
-        const compressedSize = this.getDataUrlSize(compressedDataUrl);
+        const compressedSizeBytes = this.getDataUrlSize(compressedDataUrl);
         
-        this.compressedSize.textContent = this.formatFileSize(compressedSize);
+        compressedSize.textContent = this.formatFileSize(compressedSizeBytes);
         
         // Calculate compression stats
-        const sizeReduction = originalSize - compressedSize;
-        const reductionPercent = ((sizeReduction / originalSize) * 100).toFixed(1);
-        const compressionRatio = (originalSize / compressedSize).toFixed(1);
+        const sizeReductionBytes = originalSize - compressedSizeBytes;
+        const reductionPercent = ((sizeReductionBytes / originalSize) * 100).toFixed(1);
+        const compressionRatioValue = (originalSize / compressedSizeBytes).toFixed(1);
         
-        this.sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReduction)})`;
-        this.compressionRatio.textContent = `${compressionRatio}:1`;
+        sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReductionBytes)})`;
+        compressionRatio.textContent = `${compressionRatioValue}:1`;
         
         // Store compressed data for download
         this.compressedDataUrl = compressedDataUrl;
         
-        // Show results section
-        this.resultsSection.style.display = 'block';
-        this.resultsSection.scrollIntoView({ behavior: 'smooth' });
-        
-        // Add success animation
-        this.resultsSection.classList.add('success-animation');
-        setTimeout(() => {
-            this.resultsSection.classList.remove('success-animation');
-        }, 600);
+        // Show results section with optimized animation
+        resultsSection.style.display = 'block';
+        requestAnimationFrame(() => {
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+            resultsSection.classList.add('success-animation');
+            setTimeout(() => resultsSection.classList.remove('success-animation'), 600);
+        });
     }
 
     getDataUrlSize(dataUrl) {
@@ -250,8 +266,8 @@ class ImageCompressor {
     generateFileName() {
         const originalName = this.originalFile.name;
         const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-        const format = this.formatSelect.value;
-        const quality = this.qualitySlider.value;
+        const format = this.elements.formatSelect.value;
+        const quality = this.elements.qualitySlider.value;
         
         return `${nameWithoutExt}_compressed_${quality}%.${format}`;
     }
@@ -267,8 +283,8 @@ class ImageCompressor {
     }
 
     resetCompressButton() {
-        this.compressBtn.innerHTML = '<i class="fas fa-compress-alt"></i> Compress Image';
-        this.compressBtn.disabled = false;
+        this.elements.compressBtn.innerHTML = '<i class="fas fa-compress-alt"></i> Compress Image';
+        this.elements.compressBtn.disabled = false;
     }
 
     showError(message) {
@@ -301,105 +317,7 @@ class ImageCompressor {
     }
 }
 
-// Add CSS animations for notifications
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
-
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new ImageCompressor();
 });
-
-// Add some utility functions for better UX
-document.addEventListener('DOMContentLoaded', () => {
-    // Add smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // Add intersection observer for animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Observe feature cards
-    document.querySelectorAll('.feature-card').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s ease';
-        observer.observe(card);
-    });
-});
-
-// Add keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + O to open file dialog
-    if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
-        e.preventDefault();
-        document.getElementById('fileInput').click();
-    }
-    
-    // Ctrl/Cmd + S to download (if compressed image exists)
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        const downloadBtn = document.getElementById('downloadBtn');
-        if (downloadBtn && downloadBtn.style.display !== 'none') {
-            downloadBtn.click();
-        }
-    }
-});
-
-// Add service worker for offline functionality (optional)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
-}

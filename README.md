@@ -77,6 +77,62 @@ To integrate with AdSense:
 2. Open `index.html` in a web browser
 3. No server setup required - works offline!
 
+## Local Development
+
+### Quick Start (No Server Required)
+Simply open `index.html` directly in your browser - the app works offline!
+
+### Local Test Server (Recommended)
+
+For better development experience and testing, use a local server:
+
+#### Option 1: Python (Built-in)
+```bash
+# Python 3
+python -m http.server 8000
+
+# Python 2
+python -m SimpleHTTPServer 8000
+```
+Then visit: `http://localhost:8000`
+
+#### Option 2: Node.js (if you have Node.js installed)
+```bash
+# Install a simple server globally
+npm install -g http-server
+
+# Start server
+http-server -p 8000
+```
+Then visit: `http://localhost:8000`
+
+#### Option 3: PHP (if you have PHP installed)
+```bash
+php -S localhost:8000
+```
+Then visit: `http://localhost:8000`
+
+#### Option 4: VS Code Live Server Extension
+1. Install "Live Server" extension in VS Code
+2. Right-click on `index.html`
+3. Select "Open with Live Server"
+
+### Why Use a Local Server?
+
+- **CORS Compliance**: Some browsers block file:// protocol for security
+- **Font Loading**: External fonts (Google Fonts) load properly
+- **Performance Testing**: More accurate performance measurements
+- **Development Tools**: Better debugging and testing capabilities
+- **AdSense Testing**: AdSense requires HTTPS or localhost for testing
+
+### Testing Performance Optimizations
+
+After implementing performance optimizations, test with:
+1. **Lighthouse**: Use Chrome DevTools Lighthouse tab
+2. **Network Throttling**: Test on slow connections
+3. **Mobile Testing**: Use Chrome DevTools device emulation
+4. **Font Loading**: Verify Font Awesome icons load properly
+
 ## Customization
 
 - Modify colors in `styles.css`

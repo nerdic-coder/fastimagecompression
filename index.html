@@ -58,9 +58,40 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     
-    <!-- Preload critical fonts -->
+    <!-- Preload critical fonts with optimized loading -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Font loading optimization to prevent layout shifts -->
+    <style>
+        /* Fallback font stack with similar metrics to Inter */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            font-display: swap;
+        }
+        
+        /* Prevent layout shifts during font loading */
+        .font-loading {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        /* Optimize font rendering */
+        * {
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Smooth font transition to prevent layout shifts */
+        .font-loading * {
+            font-display: swap;
+        }
+        
+        .fonts-loaded * {
+            font-display: swap;
+            transition: font-family 0.1s ease-in-out;
+        }
+    </style>
     
     <!-- Critical CSS inlined for above-the-fold content -->
     <style>
@@ -88,6 +119,16 @@
         .upload-content i { font-size: 3rem; color: #667eea; margin-bottom: 1rem; }
         .upload-content h3 { font-size: 1.5rem; font-weight: 600; color: #333; margin-bottom: 0.5rem; }
         .upload-content p { color: #666; font-size: 1rem; }
+        
+        /* Error notification animations */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     </style>
     
     <!-- Load non-critical CSS asynchronously -->
@@ -341,8 +382,41 @@
         </div>
     </footer>
 
-    <!-- Font Awesome load detection script -->
+    <!-- Font loading optimization script -->
     <script>
+        // Optimize font loading to prevent layout shifts
+        function optimizeFontLoading() {
+            // Add fallback class initially
+            document.body.classList.add('font-loading');
+            
+            // Check if fonts are loaded
+            if (document.fonts && document.fonts.load) {
+                // Load Inter font weights
+                const fontWeights = ['300', '400', '500', '600', '700'];
+                const fontPromises = fontWeights.map(weight => 
+                    document.fonts.load(`${weight} 16px Inter`)
+                );
+                
+                Promise.all(fontPromises).then(() => {
+                    // Remove fallback class when fonts are loaded
+                    document.body.classList.remove('font-loading');
+                    document.body.classList.add('fonts-loaded');
+                }).catch(() => {
+                    // Fallback: remove class after timeout
+                    setTimeout(() => {
+                        document.body.classList.remove('font-loading');
+                        document.body.classList.add('fonts-loaded');
+                    }, 3000);
+                });
+            } else {
+                // Fallback for browsers without Font Loading API
+                setTimeout(() => {
+                    document.body.classList.remove('font-loading');
+                    document.body.classList.add('fonts-loaded');
+                }, 1000);
+            }
+        }
+        
         // Detect when Font Awesome has loaded and show icons
         function checkFontAwesomeLoaded() {
             // Check if Font Awesome font is loaded
@@ -371,10 +445,14 @@
             }
         }
         
-        // Start checking when DOM is ready
+        // Start font optimization when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', checkFontAwesomeLoaded);
+            document.addEventListener('DOMContentLoaded', () => {
+                optimizeFontLoading();
+                checkFontAwesomeLoaded();
+            });
         } else {
+            optimizeFontLoading();
             checkFontAwesomeLoaded();
         }
     </script>
