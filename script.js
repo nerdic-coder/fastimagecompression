@@ -316,6 +316,8 @@ class ImageCompressor {
             this.originalImage = img;
             this.showControls();
             this.displayOriginalImage();
+            // Show progress section for single file too
+            this.showProgressSection([file]);
         };
         
         img.onerror = () => {
@@ -492,6 +494,9 @@ class ImageCompressor {
             const quality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
             
+            // Update progress for single image
+            this.updateImageStatus(0, 'processing');
+            
             // Use main thread compression only (Service Worker disabled)
             let compressedDataUrl;
             compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
@@ -500,6 +505,7 @@ class ImageCompressor {
             const compressedImg = new Image();
             compressedImg.onload = () => {
                 this.compressedImage = compressedImg;
+                this.updateImageStatus(0, 'completed');
                 this.displaySingleResults(compressedDataUrl);
                 this.resetCompressButton();
                 this.isProcessing = false;
@@ -508,6 +514,7 @@ class ImageCompressor {
             
         } catch (error) {
             console.error('Compression error:', error);
+            this.updateImageStatus(0, 'error', 'Compression failed');
             this.showError('Failed to compress image. Please try again.');
             this.resetCompressButton();
             this.isProcessing = false;
@@ -647,8 +654,11 @@ class ImageCompressor {
     displaySingleResults(compressedDataUrl) {
         const { 
             compressedImageEl, compressedDimensions, compressedSize, 
-            sizeReduction, compressionRatio, resultsSection, singleResults, batchResults 
+            sizeReduction, compressionRatio, resultsSection, singleResults, batchResults, progressSection
         } = this.elements;
+        
+        // Hide progress section when showing results
+        progressSection.style.display = 'none';
         
         // Show single results, hide batch results
         singleResults.style.display = 'block';
@@ -686,9 +696,12 @@ class ImageCompressor {
 
     displayBatchResults() {
         const { 
-            resultsSection, singleResults, batchResults, downloadAllBtn,
+            resultsSection, singleResults, batchResults, downloadAllBtn, progressSection,
             totalImages, totalSizeReduction, averageCompression, batchImageGrid
         } = this.elements;
+        
+        // Hide progress section when showing results
+        progressSection.style.display = 'none';
         
         // Show batch results, hide single results
         singleResults.style.display = 'none';
