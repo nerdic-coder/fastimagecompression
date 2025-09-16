@@ -1,4 +1,4 @@
-// Image Compression App - Optimized for Performance
+// Image Compression App - Optimized for Performance with Service Worker
 class ImageCompressor {
     constructor() {
         this.originalFile = null;
@@ -7,6 +7,9 @@ class ImageCompressor {
         this.canvas = null;
         this.ctx = null;
         this.isProcessing = false;
+        this.serviceWorker = null;
+        this.messageId = 0;
+        this.pendingCompressions = new Map();
         
         // Defer heavy initialization
         requestIdleCallback ? 
@@ -18,6 +21,43 @@ class ImageCompressor {
         this.initializeElements();
         this.bindEvents();
         this.preCreateCanvas();
+        this.initializeServiceWorker();
+    }
+    
+    async initializeServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                this.serviceWorker = registration.active || registration.waiting || registration.installing;
+                
+                // Listen for messages from Service Worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    this.handleServiceWorkerMessage(event.data);
+                });
+                
+                console.log('Service Worker registered successfully');
+            } catch (error) {
+                console.log('Service Worker registration failed:', error);
+                // Fallback to main thread compression
+            }
+        }
+    }
+    
+    handleServiceWorkerMessage(data) {
+        const { type, id, success, data: resultData, error } = data;
+        
+        if (type === 'COMPRESSION_COMPLETE') {
+            const pendingCompression = this.pendingCompressions.get(id);
+            if (pendingCompression) {
+                this.pendingCompressions.delete(id);
+                
+                if (success) {
+                    pendingCompression.resolve(resultData);
+                } else {
+                    pendingCompression.reject(new Error(error));
+                }
+            }
+        }
     }
 
     initializeElements() {
@@ -182,8 +222,13 @@ class ImageCompressor {
             const quality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
             
-            // Use multiple idle callbacks to break up work
-            const compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
+            // Try Service Worker compression first, fallback to main thread
+            let compressedDataUrl;
+            if (this.serviceWorker) {
+                compressedDataUrl = await this.compressImageWithServiceWorker(this.originalImage, quality, format);
+            } else {
+                compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
+            }
             
             // Create compressed image object
             const compressedImg = new Image();
@@ -201,6 +246,57 @@ class ImageCompressor {
             this.resetCompressButton();
             this.isProcessing = false;
         }
+    }
+    
+    // Compress image using Service Worker (non-blocking)
+    async compressImageWithServiceWorker(image, quality, format) {
+        return new Promise((resolve, reject) => {
+            // Get image data from canvas
+            this.canvas.width = image.width;
+            this.canvas.height = image.height;
+            this.ctx.drawImage(image, 0, 0);
+            
+            const imageData = this.ctx.getImageData(0, 0, image.width, image.height);
+            
+            // Generate unique message ID
+            const messageId = ++this.messageId;
+            
+            // Store promise resolvers
+            this.pendingCompressions.set(messageId, { resolve, reject });
+            
+            // Send compression request to Service Worker
+            if (this.serviceWorker) {
+                this.serviceWorker.postMessage({
+                    type: 'COMPRESS_IMAGE',
+                    id: messageId,
+                    data: {
+                        imageData: imageData.data,
+                        width: image.width,
+                        height: image.height,
+                        quality: quality,
+                        format: format
+                    }
+                });
+            } else {
+                reject(new Error('Service Worker not available'));
+            }
+            
+            // Timeout after 30 seconds
+            setTimeout(() => {
+                if (this.pendingCompressions.has(messageId)) {
+                    this.pendingCompressions.delete(messageId);
+                    reject(new Error('Compression timeout'));
+                }
+            }, 30000);
+        }).then(result => {
+            // Convert ArrayBuffer back to data URL
+            const blob = new Blob([new Uint8Array(result.data)], { type: result.mimeType });
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        });
     }
     
     // Break compression into smaller chunks using idle callbacks
