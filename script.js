@@ -18,10 +18,13 @@ class ImageCompressor {
         };
         this.usesNativeFileInput = false;
         
-        // Defer heavy initialization
-        requestIdleCallback ? 
-            requestIdleCallback(() => this.initialize()) :
+        // Defer heavy initialization with Safari iOS compatibility
+        if (typeof requestIdleCallback !== 'undefined') {
+            requestIdleCallback(() => this.initialize());
+        } else {
+            // Fallback for Safari iOS and other browsers without requestIdleCallback
             setTimeout(() => this.initialize(), 0);
+        }
     }
     
     initialize() {
@@ -34,16 +37,22 @@ class ImageCompressor {
     detectSafariAndApplyFixes() {
         const userAgent = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+        const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
         const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
         const hasCoarsePointer = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
         const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
         const isSmallScreen = window.innerWidth <= 768; // Force mobile UI on small screens
         const treatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || isSmallScreen;
+        
+        // Store Safari iOS detection for later use
+        this.isSafariIOS = isIOS && isSafari;
 
         // Debug logging
         console.log('Mobile Detection Debug:', {
             userAgent: userAgent,
             isIOS: isIOS,
+            isSafari: isSafari,
+            isSafariIOS: this.isSafariIOS,
             isMobileUA: isMobileUA,
             hasCoarsePointer: hasCoarsePointer,
             hasTouchSupport: hasTouchSupport,
@@ -414,8 +423,12 @@ class ImageCompressor {
         this.showProgressSection([file]);
         this.prepareCompressButtonForImageLoad();
 
-        // Create image object
+        // Create image object with Safari iOS compatibility
         const img = new Image();
+        
+        // Safari iOS specific fixes
+        img.crossOrigin = 'anonymous';
+        
         img.onload = () => {
             console.log('Image loaded successfully:', file.name);
             this.originalImage = img;
@@ -424,9 +437,9 @@ class ImageCompressor {
             this.resetCompressButton();
         };
 
-        img.onerror = () => {
-            console.error('Failed to load image:', file.name);
-            this.showError('Failed to load image. Please try another file.');
+        img.onerror = (error) => {
+            console.error('Failed to load image:', file.name, error);
+            this.showError(`Failed to load image "${file.name}". This might be due to Safari iOS restrictions. Please try a different image.`);
             this.updateImageStatus(0, 'error', 'Load failed');
             this.originalImage = null;
             this.originalFile = null;
@@ -435,7 +448,15 @@ class ImageCompressor {
         };
 
         console.log('Creating object URL for image:', file.name);
-        img.src = URL.createObjectURL(file);
+        try {
+            const objectURL = URL.createObjectURL(file);
+            console.log('Object URL created:', objectURL);
+            img.src = objectURL;
+        } catch (error) {
+            console.error('Error creating object URL:', error);
+            this.showError('Error processing image. Please try a different file.');
+            this.updateImageStatus(0, 'error', 'URL creation failed');
+        }
     }
 
     processMultipleFiles(files) {
@@ -710,6 +731,12 @@ class ImageCompressor {
     async compressFile(file, quality, format) {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            
+            // Safari iOS specific fixes
+            if (this.isSafariIOS) {
+                img.crossOrigin = 'anonymous';
+            }
+            
             img.onload = async () => {
                 try {
                     // Use main thread compression only (Service Worker disabled)
@@ -735,25 +762,31 @@ class ImageCompressor {
                 }
             };
             
-            img.onerror = () => {
-                reject(new Error('Failed to load image'));
+            img.onerror = (error) => {
+                console.error('Failed to load image in batch processing:', file.name, error);
+                reject(new Error(`Failed to load image: ${file.name}`));
             };
             
-            img.src = URL.createObjectURL(file);
+            try {
+                img.src = URL.createObjectURL(file);
+            } catch (error) {
+                console.error('Error creating object URL in batch processing:', error);
+                reject(new Error(`Error processing image: ${file.name}`));
+            }
         });
     }
     
     // Break compression into smaller chunks using idle callbacks
     compressImageWithIdleCallback(image, quality, format) {
         return new Promise((resolve) => {
-            if (window.requestIdleCallback) {
+            if (typeof window.requestIdleCallback !== 'undefined') {
                 // Use idle callback to avoid blocking main thread
                 window.requestIdleCallback(() => {
                     const result = this.compressImageData(image, quality, format);
                     resolve(result);
                 }, { timeout: 5000 });
             } else {
-                // Fallback for browsers without requestIdleCallback
+                // Fallback for browsers without requestIdleCallback (Safari iOS)
                 setTimeout(() => {
                     const result = this.compressImageData(image, quality, format);
                     resolve(result);
@@ -1068,7 +1101,7 @@ class ImageCompressor {
                 }, 300);
             };
             
-            if (window.requestIdleCallback) {
+            if (typeof window.requestIdleCallback !== 'undefined') {
                 window.requestIdleCallback(() => {
                     setTimeout(removeError, 5000);
                 });
@@ -1082,12 +1115,12 @@ class ImageCompressor {
 // Optimized initialization with minimal main-thread impact
 function initializeApp() {
     // Use requestIdleCallback for initialization if available
-    if (window.requestIdleCallback) {
+    if (typeof window.requestIdleCallback !== 'undefined') {
         window.requestIdleCallback(() => {
             new ImageCompressor();
         }, { timeout: 2000 });
     } else {
-        // Fallback: use setTimeout to defer initialization
+        // Fallback: use setTimeout to defer initialization (Safari iOS compatible)
         setTimeout(() => {
             new ImageCompressor();
         }, 0);
