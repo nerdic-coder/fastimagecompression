@@ -202,6 +202,10 @@ body {
     font-size: 1rem;
 }
 
+.upload-area.touch-device .desktop-upload-message {
+    display: none;
+}
+
 .mobile-upload-wrapper {
     position: absolute;
     width: 1px;
@@ -410,6 +414,11 @@ body {
 .image-item-status.processing {
     background: #fff3cd;
     color: #856404;
+}
+
+.image-item-status.ready {
+    background: #d1ecf1;
+    color: #0c5460;
 }
 
 .image-item-status.completed {

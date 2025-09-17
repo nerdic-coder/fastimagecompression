@@ -307,7 +307,10 @@ class ImageCompressor {
     processFiles(files) {
         // Filter valid image files
         const validFiles = files.filter(file => {
-            if (!file.type.startsWith('image/')) {
+            const hasImageMimeType = file.type && file.type.startsWith('image/');
+            const hasImageExtension = file.name ? /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(file.name) : false;
+
+            if (!hasImageMimeType && !hasImageExtension) {
                 this.showError(`Skipping ${file.name}: Not a valid image file.`);
                 return false;
             }
@@ -336,20 +339,28 @@ class ImageCompressor {
     }
 
     processSingleFile(file) {
+        this.showControls();
+        this.showProgressSection([file]);
+        this.prepareCompressButtonForImageLoad();
+
         // Create image object
         const img = new Image();
         img.onload = () => {
             this.originalImage = img;
-            this.showControls();
+            this.updateImageStatus(0, 'ready');
             this.displayOriginalImage();
-            // Show progress section for single file too
-            this.showProgressSection([file]);
+            this.resetCompressButton();
         };
-        
+
         img.onerror = () => {
             this.showError('Failed to load image. Please try another file.');
+            this.updateImageStatus(0, 'error', 'Load failed');
+            this.originalImage = null;
+            this.originalFile = null;
+            this.originalFiles = [];
+            this.resetCompressButton();
         };
-        
+
         img.src = URL.createObjectURL(file);
     }
 
@@ -455,8 +466,11 @@ class ImageCompressor {
         if (imageItem) {
             const statusEl = imageItem.querySelector('.image-item-status');
             statusEl.className = `image-item-status ${status}`;
-            
+
             switch (status) {
+                case 'ready':
+                    statusEl.textContent = 'Ready to compress';
+                    break;
                 case 'processing':
                     statusEl.textContent = 'Processing...';
                     break;
@@ -472,6 +486,16 @@ class ImageCompressor {
             
             this.updateProgress();
         }
+    }
+
+    prepareCompressButtonForImageLoad() {
+        const { compressBtn } = this.elements;
+        if (!compressBtn) {
+            return;
+        }
+
+        compressBtn.innerHTML = '<div class="loading"></div> Preparing image...';
+        compressBtn.disabled = true;
     }
 
     displayOriginalImage() {
