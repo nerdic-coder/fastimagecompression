@@ -252,24 +252,33 @@ body {
 }
 
 .upload-area.touch-device .mobile-upload-wrapper {
-    position: relative;
-    clip: auto;
-    width: 100%;
-    height: auto;
-    margin: 1.5rem 0 0;
-    overflow: visible;
-    display: flex;
-    justify-content: center;
-    white-space: normal;
-    min-height: 3.25rem;
+    position: relative !important;
+    clip: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 1.5rem 0 0 !important;
+    overflow: visible !important;
+    display: flex !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    min-height: 3.25rem !important;
+    padding: 0 !important;
+    border: 0 !important;
 }
 
 .upload-area.touch-device .mobile-upload-button {
-    display: inline-flex;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .upload-area.touch-device {
     cursor: default;
+}
+
+/* Additional debugging styles */
+.upload-area.touch-device .desktop-upload-message {
+    display: none !important;
 }
 
 .file-input {
@@ -933,6 +942,34 @@ select:focus {
     .batch-image-card img {
         height: 110px;
         max-width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Force mobile upload button on small screens */
+    .upload-area .mobile-upload-wrapper {
+        position: relative !important;
+        clip: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 1.5rem 0 0 !important;
+        overflow: visible !important;
+        display: flex !important;
+        justify-content: center !important;
+        white-space: normal !important;
+        min-height: 3.25rem !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+    
+    .upload-area .mobile-upload-button {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .upload-area .desktop-upload-message {
+        display: none !important;
     }
 }
 

@@ -37,12 +37,26 @@ class ImageCompressor {
         const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
         const hasCoarsePointer = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
         const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
-        const treatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport;
+        const isSmallScreen = window.innerWidth <= 768; // Force mobile UI on small screens
+        const treatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || isSmallScreen;
+
+        // Debug logging
+        console.log('Mobile Detection Debug:', {
+            userAgent: userAgent,
+            isIOS: isIOS,
+            isMobileUA: isMobileUA,
+            hasCoarsePointer: hasCoarsePointer,
+            hasTouchSupport: hasTouchSupport,
+            isSmallScreen: isSmallScreen,
+            screenWidth: window.innerWidth,
+            treatAsMobile: treatAsMobile
+        });
 
         this.configureFileInput(isIOS || isMobileUA);
 
         const { uploadArea, fileInput, mobileUploadButton } = this.elements;
         if (!uploadArea || !fileInput) {
+            console.error('Upload area or file input not found');
             return;
         }
 
@@ -50,12 +64,15 @@ class ImageCompressor {
         uploadArea.classList.toggle('touch-device', treatAsMobile);
         uploadArea.classList.toggle('no-touch', !treatAsMobile);
 
+        console.log('Upload area classes after toggle:', uploadArea.className);
+
         if (treatAsMobile) {
             fileInput.classList.remove('file-input-hidden');
             fileInput.classList.add('file-input-touch');
             if (mobileUploadButton) {
                 mobileUploadButton.setAttribute('aria-hidden', 'false');
                 mobileUploadButton.setAttribute('tabindex', '0');
+                console.log('Mobile upload button configured for mobile');
             }
 
             const mobileHint = uploadArea.querySelector('.multi-file-hint');
@@ -68,8 +85,21 @@ class ImageCompressor {
             if (mobileUploadButton) {
                 mobileUploadButton.setAttribute('aria-hidden', 'true');
                 mobileUploadButton.removeAttribute('tabindex');
+                console.log('Mobile upload button configured for desktop');
             }
         }
+
+        // Also handle window resize events to update mobile detection
+        window.addEventListener('resize', () => {
+            const newIsSmallScreen = window.innerWidth <= 768;
+            const newTreatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || newIsSmallScreen;
+            
+            if (newTreatAsMobile !== treatAsMobile) {
+                console.log('Screen size changed, updating mobile detection');
+                uploadArea.classList.toggle('touch-device', newTreatAsMobile);
+                uploadArea.classList.toggle('no-touch', !newTreatAsMobile);
+            }
+        });
     }
     
     configureFileInput(isMobile) {
