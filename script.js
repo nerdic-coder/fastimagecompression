@@ -100,6 +100,12 @@ class ImageCompressor {
                 uploadArea.classList.toggle('no-touch', !newTreatAsMobile);
             }
         });
+        
+        // Debug: Add a test function to force show controls
+        window.testShowControls = () => {
+            console.log('Testing showControls function');
+            this.showControls();
+        };
     }
     
     configureFileInput(isMobile) {
@@ -174,6 +180,19 @@ class ImageCompressor {
             averageCompression: document.getElementById('averageCompression'),
             batchImageGrid: document.getElementById('batchImageGrid')
         };
+        
+        // Debug: Check if critical elements are found
+        console.log('Element initialization debug:', {
+            uploadArea: !!this.elements.uploadArea,
+            fileInput: !!this.elements.fileInput,
+            controls: !!this.elements.controls,
+            progressSection: !!this.elements.progressSection,
+            resultsSection: !!this.elements.resultsSection
+        });
+        
+        if (!this.elements.controls) {
+            console.error('CRITICAL: Controls element not found!');
+        }
     }
 
     preCreateCanvas() {
@@ -328,6 +347,12 @@ class ImageCompressor {
         
         if (files.length > 0) {
             console.log('File names:', files.map(f => f.name));
+            console.log('File details:', files.map(f => ({
+                name: f.name,
+                size: f.size,
+                type: f.type,
+                lastModified: f.lastModified
+            })));
             this.processFiles(files);
         } else {
             console.log('No files selected or files not accessible');
@@ -337,10 +362,19 @@ class ImageCompressor {
     }
 
     processFiles(files) {
+        console.log('processFiles called with', files.length, 'files');
+        
         // Filter valid image files
         const validFiles = files.filter(file => {
             const hasImageMimeType = file.type && file.type.startsWith('image/');
             const hasImageExtension = file.name ? /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(file.name) : false;
+
+            console.log(`File ${file.name}:`, {
+                type: file.type,
+                hasImageMimeType: hasImageMimeType,
+                hasImageExtension: hasImageExtension,
+                size: file.size
+            });
 
             if (!hasImageMimeType && !hasImageExtension) {
                 this.showError(`Skipping ${file.name}: Not a valid image file.`);
@@ -353,6 +387,8 @@ class ImageCompressor {
             return true;
         });
 
+        console.log('Valid files after filtering:', validFiles.length);
+
         if (validFiles.length === 0) {
             this.showError('No valid image files selected.');
             return;
@@ -362,15 +398,18 @@ class ImageCompressor {
         
         if (validFiles.length === 1) {
             // Single file - use existing single file flow
+            console.log('Processing single file:', validFiles[0].name);
             this.originalFile = validFiles[0];
             this.processSingleFile(validFiles[0]);
         } else {
             // Multiple files - use batch processing flow
+            console.log('Processing multiple files:', validFiles.length);
             this.processMultipleFiles(validFiles);
         }
     }
 
     processSingleFile(file) {
+        console.log('processSingleFile called for:', file.name);
         this.showControls();
         this.showProgressSection([file]);
         this.prepareCompressButtonForImageLoad();
@@ -378,6 +417,7 @@ class ImageCompressor {
         // Create image object
         const img = new Image();
         img.onload = () => {
+            console.log('Image loaded successfully:', file.name);
             this.originalImage = img;
             this.updateImageStatus(0, 'ready');
             this.displayOriginalImage();
@@ -385,6 +425,7 @@ class ImageCompressor {
         };
 
         img.onerror = () => {
+            console.error('Failed to load image:', file.name);
             this.showError('Failed to load image. Please try another file.');
             this.updateImageStatus(0, 'error', 'Load failed');
             this.originalImage = null;
@@ -393,17 +434,27 @@ class ImageCompressor {
             this.resetCompressButton();
         };
 
+        console.log('Creating object URL for image:', file.name);
         img.src = URL.createObjectURL(file);
     }
 
     processMultipleFiles(files) {
+        console.log('processMultipleFiles called for', files.length, 'files');
         this.showControls();
         this.updateCompressButtonForBatch(files.length);
         this.showProgressSection(files);
     }
 
     showControls() {
+        console.log('showControls called');
         const { controls, resultsSection, progressSection } = this.elements;
+        
+        if (!controls) {
+            console.error('Controls element not found!');
+            return;
+        }
+        
+        console.log('Showing controls, hiding results and progress sections');
         controls.style.display = 'block';
         resultsSection.style.display = 'none';
         progressSection.style.display = 'none';
@@ -413,6 +464,7 @@ class ImageCompressor {
             controls.style.transition = 'all 0.3s ease';
             controls.style.opacity = '1';
             controls.style.transform = 'translateY(0)';
+            console.log('Controls animation applied');
         });
     }
 
