@@ -86,7 +86,7 @@ class ImageCompressor {
 
             const mobileHint = uploadArea.querySelector('.multi-file-hint');
             if (mobileHint) {
-                mobileHint.textContent = 'Tap "Choose Photos" to browse images from your device. You can select multiple at once!';
+                mobileHint.textContent = 'Tap "Choose Photos" to select from library, camera, or files. You can select multiple at once!';
             }
         } else {
             fileInput.classList.add('file-input-hidden');
@@ -120,30 +120,19 @@ class ImageCompressor {
     configureFileInput(isMobile) {
         const { fileInput } = this.elements;
 
-        // For desktop browsers, create a completely clean file input
-        if (!isMobile) {
-            console.log('Desktop device detected - creating clean file input');
-            
-            // Remove all potentially problematic attributes
-            fileInput.removeAttribute('capture');
-            fileInput.removeAttribute('webkitdirectory');
-            fileInput.removeAttribute('directory');
-            
-            // Set only the essential attributes
-            fileInput.setAttribute('type', 'file');
-            fileInput.setAttribute('accept', 'image/*');
-            fileInput.setAttribute('multiple', 'true');
-            
-            console.log('Clean file input created for desktop');
-        } else {
-            // Mobile configuration
-            fileInput.setAttribute('capture', 'environment');
-            fileInput.removeAttribute('webkitdirectory');
-            fileInput.setAttribute('multiple', 'true');
-            console.log('Mobile device detected - capture attribute set');
-        }
-
-        console.log('File input configured for:', isMobile ? 'mobile' : 'desktop');
+        console.log('Configuring file input for:', isMobile ? 'mobile' : 'desktop');
+        
+        // Remove all potentially problematic attributes for both mobile and desktop
+        fileInput.removeAttribute('capture');
+        fileInput.removeAttribute('webkitdirectory');
+        fileInput.removeAttribute('directory');
+        
+        // Set only the essential attributes for both mobile and desktop
+        fileInput.setAttribute('type', 'file');
+        fileInput.setAttribute('accept', 'image/*');
+        fileInput.setAttribute('multiple', 'true');
+        
+        console.log('File input configured - native picker will be used');
         console.log('File input attributes after configuration:', {
             type: fileInput.getAttribute('type'),
             capture: fileInput.getAttribute('capture'),
