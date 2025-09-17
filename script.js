@@ -88,6 +88,9 @@ class ImageCompressor {
             if (mobileHint) {
                 mobileHint.textContent = 'Tap "Choose Photos" to select from library, camera, or files. You can select multiple at once!';
             }
+            
+            // Configure format options for iOS
+            this.configureFormatOptionsForIOS();
         } else {
             fileInput.classList.add('file-input-hidden');
             fileInput.classList.remove('file-input-touch');
@@ -141,6 +144,76 @@ class ImageCompressor {
             multiple: fileInput.getAttribute('multiple'),
             accept: fileInput.getAttribute('accept')
         });
+    }
+    
+    configureFormatOptionsForIOS() {
+        const { formatSelect } = this.elements;
+        
+        if (!formatSelect) {
+            console.error('Format select element not found');
+            return;
+        }
+        
+        if (this.isSafariIOS) {
+            console.log('Configuring format options for Safari iOS - hiding format selector');
+            
+            // Hide the entire format control group for Safari iOS
+            const formatControlGroup = formatSelect.closest('.control-group');
+            if (formatControlGroup) {
+                formatControlGroup.style.display = 'none';
+                console.log('Format control group hidden for Safari iOS');
+            }
+            
+            // Ensure JPEG is selected as default
+            formatSelect.value = 'jpeg';
+            
+            console.log('Format options configured for Safari iOS - JPEG only');
+        } else {
+            console.log('Not Safari iOS - keeping all format options available');
+        }
+    }
+    
+    getRecommendedFormat(originalFile) {
+        if (!originalFile || !originalFile.type) {
+            return 'jpeg'; // Default fallback
+        }
+        
+        const originalType = originalFile.type.toLowerCase();
+        const fileName = originalFile.name.toLowerCase();
+        
+        // If original is WebP, keep as WebP (if supported)
+        if (originalType.includes('webp') || fileName.endsWith('.webp')) {
+            return 'webp';
+        }
+        
+        // For all other formats (JPEG, PNG, GIF, etc.), recommend JPEG for best compression
+        return 'jpeg';
+    }
+    
+    updateFormatRecommendation() {
+        if (!this.originalFile) return;
+        
+        const recommendedFormat = this.getRecommendedFormat(this.originalFile);
+        const { formatSelect } = this.elements;
+        
+        if (formatSelect && formatSelect.value !== recommendedFormat) {
+            console.log(`Recommending format change from ${formatSelect.value} to ${recommendedFormat} for better compression`);
+            
+            // Update the format select
+            formatSelect.value = recommendedFormat;
+            
+            // Show a subtle hint
+            const formatLabel = document.querySelector('label[for="formatSelect"]');
+            if (formatLabel && !this.isSafariIOS) {
+                const originalText = formatLabel.textContent.replace(/ \(.*\)/, '');
+                formatLabel.innerHTML = `${originalText} <small style="color: #28a745;">(Recommended: ${recommendedFormat.toUpperCase()})</small>`;
+                
+                // Remove the hint after 5 seconds
+                setTimeout(() => {
+                    formatLabel.textContent = originalText;
+                }, 5000);
+            }
+        }
     }
     
     initializeElements() {
@@ -398,6 +471,7 @@ class ImageCompressor {
             // Single file - use existing single file flow
             console.log('Processing single file:', validFiles[0].name);
             this.originalFile = validFiles[0];
+            this.updateFormatRecommendation(); // Update format recommendation
             this.processSingleFile(validFiles[0]);
         } else {
             // Multiple files - use batch processing flow
@@ -817,7 +891,8 @@ class ImageCompressor {
                 originalHeight: image.height,
                 quality: quality,
                 format: format,
-                isSafariIOS: this.isSafariIOS
+                isSafariIOS: this.isSafariIOS,
+                originalFormat: this.originalFile ? this.originalFile.type : 'unknown'
             });
             
             // Use pre-created canvas to avoid DOM creation overhead
@@ -837,10 +912,9 @@ class ImageCompressor {
             // Draw image on canvas
             this.ctx.drawImage(image, 0, 0);
             
-            // Convert to desired format
+            // Convert to desired format (JPEG or WebP only)
             const mimeTypes = {
                 'jpeg': 'image/jpeg',
-                'png': 'image/png',
                 'webp': 'image/webp'
             };
             const mimeType = mimeTypes[format] || 'image/jpeg';
@@ -850,7 +924,7 @@ class ImageCompressor {
                 height: this.canvas.height
             });
             
-            // Generate compressed data URL
+            // Generate compressed data URL (both JPEG and WebP use quality parameter)
             const dataUrl = this.canvas.toDataURL(mimeType, quality);
             
             // Calculate compressed size
@@ -860,7 +934,8 @@ class ImageCompressor {
                 compressedSize: compressedSize,
                 dataUrlLength: dataUrl.length,
                 mimeType: mimeType,
-                quality: quality
+                quality: quality,
+                formatChange: this.originalFile ? (this.originalFile.type !== mimeType) : false
             });
             
             resolve(dataUrl);
@@ -900,8 +975,18 @@ class ImageCompressor {
             console.warn('Compression resulted in larger file size!', {
                 originalSize: originalSize,
                 compressedSize: compressedSizeBytes,
-                increase: compressedSizeBytes - originalSize
+                increase: compressedSizeBytes - originalSize,
+                format: this.elements.formatSelect.value,
+                originalFormat: this.originalFile.type
             });
+            
+            // Show warning message with format-specific advice
+            let warningMessage;
+            if (this.elements.formatSelect.value === 'webp') {
+                warningMessage = `⚠️ WebP conversion increased file size by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))}). WebP compression may not work well with this image. Try using JPEG format instead.`;
+            } else {
+                warningMessage = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))}). This can happen with certain image types or when using high quality settings. Try lowering the quality slider or changing the output format.`;
+            }
             
             // Show warning message
             sizeReduction.textContent = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))})`;
@@ -911,7 +996,7 @@ class ImageCompressor {
             compressionRatio.style.color = '#dc3545';
             
             // Show helpful message
-            this.showError('The compressed image is larger than the original. This can happen with certain image types or when using high quality settings. Try lowering the quality slider or changing the output format to JPEG.');
+            this.showError(warningMessage);
         } else {
             // Normal compression success
             sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReductionBytes)})`;
