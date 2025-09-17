@@ -34,21 +34,23 @@ class ImageCompressor {
     detectSafariAndApplyFixes() {
         const userAgent = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-        const useNativeTrigger = isIOS || (isMobile && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+        const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        const hasCoarsePointer = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
+        const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        const treatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport;
 
-        this.configureFileInput(isMobile);
+        this.configureFileInput(isIOS || isMobileUA);
 
         const { uploadArea, fileInput, mobileUploadButton } = this.elements;
         if (!uploadArea || !fileInput) {
             return;
         }
 
-        this.usesNativeFileInput = useNativeTrigger;
-        uploadArea.classList.toggle('touch-device', useNativeTrigger);
-        uploadArea.classList.toggle('no-touch', !useNativeTrigger);
+        this.usesNativeFileInput = treatAsMobile;
+        uploadArea.classList.toggle('touch-device', treatAsMobile);
+        uploadArea.classList.toggle('no-touch', !treatAsMobile);
 
-        if (useNativeTrigger) {
+        if (treatAsMobile) {
             fileInput.classList.remove('file-input-hidden');
             fileInput.classList.add('file-input-touch');
             if (mobileUploadButton) {
