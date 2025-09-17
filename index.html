@@ -202,8 +202,8 @@
                     <div class="upload-area no-touch" id="uploadArea">
                         <div class="upload-content">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <h3>Drop your photos, pictures, or images here</h3>
-                            <p>or click to browse and compress JPEG, PNG, GIF files</p>
+                            <h3 class="desktop-upload-message">Drop your photos, pictures, or images here</h3>
+                            <p class="desktop-upload-message">or click to browse and compress JPEG, PNG, GIF files</p>
                             <small class="multi-file-hint">You can select multiple images at once!</small>
                         </div>
                         <div class="mobile-upload-wrapper">
@@ -218,8 +218,8 @@
                     <!-- Compression Controls -->
                     <div class="controls" id="controls" style="display: none;">
                         <div class="control-group">
-                            <label for="qualitySlider">Compression Quality: <span id="qualityValue">80</span>%</label>
-                            <input type="range" id="qualitySlider" min="10" max="100" value="80" class="slider">
+                            <label for="qualitySlider">Compression Quality: <span id="qualityValue">70</span>%</label>
+                            <input type="range" id="qualitySlider" min="10" max="100" value="70" class="slider">
                             <div class="slider-labels">
                                 <span>Smaller file size</span>
                                 <span>Better image quality</span>
@@ -230,7 +230,6 @@
                             <label for="formatSelect">Output Format:</label>
                             <select id="formatSelect">
                                 <option value="jpeg">JPEG</option>
-                                <option value="png">PNG</option>
                                 <option value="webp">WebP</option>
                             </select>
                         </div>

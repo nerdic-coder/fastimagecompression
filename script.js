@@ -18,10 +18,13 @@ class ImageCompressor {
         };
         this.usesNativeFileInput = false;
         
-        // Defer heavy initialization
-        requestIdleCallback ? 
-            requestIdleCallback(() => this.initialize()) :
+        // Defer heavy initialization with Safari iOS compatibility
+        if (typeof requestIdleCallback !== 'undefined') {
+            requestIdleCallback(() => this.initialize());
+        } else {
+            // Fallback for Safari iOS and other browsers without requestIdleCallback
             setTimeout(() => this.initialize(), 0);
+        }
     }
     
     initialize() {
@@ -34,69 +37,105 @@ class ImageCompressor {
     detectSafariAndApplyFixes() {
         const userAgent = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-        const useNativeTrigger = isIOS || (isMobile && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+        const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+        const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        const hasCoarsePointer = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
+        const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        const isSmallScreen = window.innerWidth <= 768; // Force mobile UI on small screens
+        const treatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || isSmallScreen;
+        
+        // Store Safari iOS detection for later use
+        this.isSafariIOS = isIOS && isSafari;
 
-        this.configureFileInput(isMobile);
+        // Debug logging
+        console.log('Mobile Detection Debug:', {
+            userAgent: userAgent,
+            isIOS: isIOS,
+            isSafari: isSafari,
+            isSafariIOS: this.isSafariIOS,
+            isMobileUA: isMobileUA,
+            hasCoarsePointer: hasCoarsePointer,
+            hasTouchSupport: hasTouchSupport,
+            isSmallScreen: isSmallScreen,
+            screenWidth: window.innerWidth,
+            treatAsMobile: treatAsMobile
+        });
+
+        this.configureFileInput(isIOS || isMobileUA);
 
         const { uploadArea, fileInput, mobileUploadButton } = this.elements;
         if (!uploadArea || !fileInput) {
+            console.error('Upload area or file input not found');
             return;
         }
 
-        this.usesNativeFileInput = useNativeTrigger;
-        uploadArea.classList.toggle('touch-device', useNativeTrigger);
-        uploadArea.classList.toggle('no-touch', !useNativeTrigger);
+        this.usesNativeFileInput = treatAsMobile;
+        uploadArea.classList.toggle('touch-device', treatAsMobile);
+        uploadArea.classList.toggle('no-touch', !treatAsMobile);
 
-        if (useNativeTrigger) {
+        console.log('Upload area classes after toggle:', uploadArea.className);
+
+        if (treatAsMobile) {
             fileInput.classList.remove('file-input-hidden');
             fileInput.classList.add('file-input-touch');
             if (mobileUploadButton) {
                 mobileUploadButton.setAttribute('aria-hidden', 'false');
                 mobileUploadButton.setAttribute('tabindex', '0');
+                console.log('Mobile upload button configured for mobile');
             }
 
             const mobileHint = uploadArea.querySelector('.multi-file-hint');
             if (mobileHint) {
-                mobileHint.textContent = 'Tap "Choose Photos" to browse images from your device. You can select multiple at once!';
+                mobileHint.textContent = 'Tap "Choose Photos" to select from library, camera, or files. You can select multiple at once!';
             }
+            
+            // Configure format options for iOS
+            this.configureFormatOptionsForIOS();
         } else {
             fileInput.classList.add('file-input-hidden');
             fileInput.classList.remove('file-input-touch');
             if (mobileUploadButton) {
                 mobileUploadButton.setAttribute('aria-hidden', 'true');
                 mobileUploadButton.removeAttribute('tabindex');
+                console.log('Mobile upload button configured for desktop');
             }
         }
+
+        // Also handle window resize events to update mobile detection
+        window.addEventListener('resize', () => {
+            const newIsSmallScreen = window.innerWidth <= 768;
+            const newTreatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || newIsSmallScreen;
+            
+            if (newTreatAsMobile !== treatAsMobile) {
+                console.log('Screen size changed, updating mobile detection');
+                uploadArea.classList.toggle('touch-device', newTreatAsMobile);
+                uploadArea.classList.toggle('no-touch', !newTreatAsMobile);
+            }
+        });
+        
+        // Debug: Add a test function to force show controls
+        window.testShowControls = () => {
+            console.log('Testing showControls function');
+            this.showControls();
+        };
     }
     
     configureFileInput(isMobile) {
         const { fileInput } = this.elements;
 
-        // For desktop browsers, create a completely clean file input
-        if (!isMobile) {
-            console.log('Desktop device detected - creating clean file input');
-            
-            // Remove all potentially problematic attributes
-            fileInput.removeAttribute('capture');
-            fileInput.removeAttribute('webkitdirectory');
-            fileInput.removeAttribute('directory');
-            
-            // Set only the essential attributes
-            fileInput.setAttribute('type', 'file');
-            fileInput.setAttribute('accept', 'image/*');
-            fileInput.setAttribute('multiple', 'true');
-            
-            console.log('Clean file input created for desktop');
-        } else {
-            // Mobile configuration
-            fileInput.setAttribute('capture', 'environment');
-            fileInput.removeAttribute('webkitdirectory');
-            fileInput.setAttribute('multiple', 'true');
-            console.log('Mobile device detected - capture attribute set');
-        }
-
-        console.log('File input configured for:', isMobile ? 'mobile' : 'desktop');
+        console.log('Configuring file input for:', isMobile ? 'mobile' : 'desktop');
+        
+        // Remove all potentially problematic attributes for both mobile and desktop
+        fileInput.removeAttribute('capture');
+        fileInput.removeAttribute('webkitdirectory');
+        fileInput.removeAttribute('directory');
+        
+        // Set only the essential attributes for both mobile and desktop
+        fileInput.setAttribute('type', 'file');
+        fileInput.setAttribute('accept', 'image/*');
+        fileInput.setAttribute('multiple', 'true');
+        
+        console.log('File input configured - native picker will be used');
         console.log('File input attributes after configuration:', {
             type: fileInput.getAttribute('type'),
             capture: fileInput.getAttribute('capture'),
@@ -105,6 +144,76 @@ class ImageCompressor {
             multiple: fileInput.getAttribute('multiple'),
             accept: fileInput.getAttribute('accept')
         });
+    }
+    
+    configureFormatOptionsForIOS() {
+        const { formatSelect } = this.elements;
+        
+        if (!formatSelect) {
+            console.error('Format select element not found');
+            return;
+        }
+        
+        if (this.isSafariIOS) {
+            console.log('Configuring format options for Safari iOS - hiding format selector');
+            
+            // Hide the entire format control group for Safari iOS
+            const formatControlGroup = formatSelect.closest('.control-group');
+            if (formatControlGroup) {
+                formatControlGroup.style.display = 'none';
+                console.log('Format control group hidden for Safari iOS');
+            }
+            
+            // Ensure JPEG is selected as default
+            formatSelect.value = 'jpeg';
+            
+            console.log('Format options configured for Safari iOS - JPEG only');
+        } else {
+            console.log('Not Safari iOS - keeping all format options available');
+        }
+    }
+    
+    getRecommendedFormat(originalFile) {
+        if (!originalFile || !originalFile.type) {
+            return 'jpeg'; // Default fallback
+        }
+        
+        const originalType = originalFile.type.toLowerCase();
+        const fileName = originalFile.name.toLowerCase();
+        
+        // If original is WebP, keep as WebP (if supported)
+        if (originalType.includes('webp') || fileName.endsWith('.webp')) {
+            return 'webp';
+        }
+        
+        // For all other formats (JPEG, PNG, GIF, etc.), recommend JPEG for best compression
+        return 'jpeg';
+    }
+    
+    updateFormatRecommendation() {
+        if (!this.originalFile) return;
+        
+        const recommendedFormat = this.getRecommendedFormat(this.originalFile);
+        const { formatSelect } = this.elements;
+        
+        if (formatSelect && formatSelect.value !== recommendedFormat) {
+            console.log(`Recommending format change from ${formatSelect.value} to ${recommendedFormat} for better compression`);
+            
+            // Update the format select
+            formatSelect.value = recommendedFormat;
+            
+            // Show a subtle hint
+            const formatLabel = document.querySelector('label[for="formatSelect"]');
+            if (formatLabel && !this.isSafariIOS) {
+                const originalText = formatLabel.textContent.replace(/ \(.*\)/, '');
+                formatLabel.innerHTML = `${originalText} <small style="color: #28a745;">(Recommended: ${recommendedFormat.toUpperCase()})</small>`;
+                
+                // Remove the hint after 5 seconds
+                setTimeout(() => {
+                    formatLabel.textContent = originalText;
+                }, 5000);
+            }
+        }
     }
     
     initializeElements() {
@@ -142,6 +251,19 @@ class ImageCompressor {
             averageCompression: document.getElementById('averageCompression'),
             batchImageGrid: document.getElementById('batchImageGrid')
         };
+        
+        // Debug: Check if critical elements are found
+        console.log('Element initialization debug:', {
+            uploadArea: !!this.elements.uploadArea,
+            fileInput: !!this.elements.fileInput,
+            controls: !!this.elements.controls,
+            progressSection: !!this.elements.progressSection,
+            resultsSection: !!this.elements.resultsSection
+        });
+        
+        if (!this.elements.controls) {
+            console.error('CRITICAL: Controls element not found!');
+        }
     }
 
     preCreateCanvas() {
@@ -296,6 +418,12 @@ class ImageCompressor {
         
         if (files.length > 0) {
             console.log('File names:', files.map(f => f.name));
+            console.log('File details:', files.map(f => ({
+                name: f.name,
+                size: f.size,
+                type: f.type,
+                lastModified: f.lastModified
+            })));
             this.processFiles(files);
         } else {
             console.log('No files selected or files not accessible');
@@ -305,9 +433,21 @@ class ImageCompressor {
     }
 
     processFiles(files) {
+        console.log('processFiles called with', files.length, 'files');
+        
         // Filter valid image files
         const validFiles = files.filter(file => {
-            if (!file.type.startsWith('image/')) {
+            const hasImageMimeType = file.type && file.type.startsWith('image/');
+            const hasImageExtension = file.name ? /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(file.name) : false;
+
+            console.log(`File ${file.name}:`, {
+                type: file.type,
+                hasImageMimeType: hasImageMimeType,
+                hasImageExtension: hasImageExtension,
+                size: file.size
+            });
+
+            if (!hasImageMimeType && !hasImageExtension) {
                 this.showError(`Skipping ${file.name}: Not a valid image file.`);
                 return false;
             }
@@ -318,6 +458,8 @@ class ImageCompressor {
             return true;
         });
 
+        console.log('Valid files after filtering:', validFiles.length);
+
         if (validFiles.length === 0) {
             this.showError('No valid image files selected.');
             return;
@@ -327,40 +469,76 @@ class ImageCompressor {
         
         if (validFiles.length === 1) {
             // Single file - use existing single file flow
+            console.log('Processing single file:', validFiles[0].name);
             this.originalFile = validFiles[0];
+            this.updateFormatRecommendation(); // Update format recommendation
             this.processSingleFile(validFiles[0]);
         } else {
             // Multiple files - use batch processing flow
+            console.log('Processing multiple files:', validFiles.length);
             this.processMultipleFiles(validFiles);
         }
     }
 
     processSingleFile(file) {
-        // Create image object
+        console.log('processSingleFile called for:', file.name);
+        this.showControls();
+        this.showProgressSection([file]);
+        this.prepareCompressButtonForImageLoad();
+
+        // Create image object with Safari iOS compatibility
         const img = new Image();
+        
+        // Safari iOS specific fixes
+        img.crossOrigin = 'anonymous';
+        
         img.onload = () => {
+            console.log('Image loaded successfully:', file.name);
             this.originalImage = img;
-            this.showControls();
+            this.updateImageStatus(0, 'ready');
             this.displayOriginalImage();
-            // Show progress section for single file too
-            this.showProgressSection([file]);
+            this.resetCompressButton();
         };
-        
-        img.onerror = () => {
-            this.showError('Failed to load image. Please try another file.');
+
+        img.onerror = (error) => {
+            console.error('Failed to load image:', file.name, error);
+            this.showError(`Failed to load image "${file.name}". This might be due to Safari iOS restrictions. Please try a different image.`);
+            this.updateImageStatus(0, 'error', 'Load failed');
+            this.originalImage = null;
+            this.originalFile = null;
+            this.originalFiles = [];
+            this.resetCompressButton();
         };
-        
-        img.src = URL.createObjectURL(file);
+
+        console.log('Creating object URL for image:', file.name);
+        try {
+            const objectURL = URL.createObjectURL(file);
+            console.log('Object URL created:', objectURL);
+            img.src = objectURL;
+        } catch (error) {
+            console.error('Error creating object URL:', error);
+            this.showError('Error processing image. Please try a different file.');
+            this.updateImageStatus(0, 'error', 'URL creation failed');
+        }
     }
 
     processMultipleFiles(files) {
+        console.log('processMultipleFiles called for', files.length, 'files');
         this.showControls();
         this.updateCompressButtonForBatch(files.length);
         this.showProgressSection(files);
     }
 
     showControls() {
+        console.log('showControls called');
         const { controls, resultsSection, progressSection } = this.elements;
+        
+        if (!controls) {
+            console.error('Controls element not found!');
+            return;
+        }
+        
+        console.log('Showing controls, hiding results and progress sections');
         controls.style.display = 'block';
         resultsSection.style.display = 'none';
         progressSection.style.display = 'none';
@@ -370,6 +548,7 @@ class ImageCompressor {
             controls.style.transition = 'all 0.3s ease';
             controls.style.opacity = '1';
             controls.style.transform = 'translateY(0)';
+            console.log('Controls animation applied');
         });
     }
 
@@ -455,8 +634,11 @@ class ImageCompressor {
         if (imageItem) {
             const statusEl = imageItem.querySelector('.image-item-status');
             statusEl.className = `image-item-status ${status}`;
-            
+
             switch (status) {
+                case 'ready':
+                    statusEl.textContent = 'Ready to compress';
+                    break;
                 case 'processing':
                     statusEl.textContent = 'Processing...';
                     break;
@@ -472,6 +654,16 @@ class ImageCompressor {
             
             this.updateProgress();
         }
+    }
+
+    prepareCompressButtonForImageLoad() {
+        const { compressBtn } = this.elements;
+        if (!compressBtn) {
+            return;
+        }
+
+        compressBtn.innerHTML = '<div class="loading"></div> Preparing image...';
+        compressBtn.disabled = true;
     }
 
     displayOriginalImage() {
@@ -517,15 +709,41 @@ class ImageCompressor {
         compressBtn.disabled = true;
 
         try {
-            const quality = parseInt(qualitySlider.value) / 100;
+            const originalQuality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
             
             // Update progress for single image
             this.updateImageStatus(0, 'processing');
             
-            // Use main thread compression only (Service Worker disabled)
-            let compressedDataUrl;
-            compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
+            // Try compression with original settings first
+            let compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, originalQuality, format);
+            let compressedSize = this.getDataUrlSize(compressedDataUrl);
+            let finalQuality = originalQuality;
+            
+            // If compression resulted in larger file, try with lower quality
+            if (compressedSize >= this.originalFile.size && originalQuality > 0.3) {
+                console.log('Compression increased file size, trying lower quality...');
+                compressBtn.innerHTML = '<div class="loading"></div> Optimizing compression...';
+                
+                // Try progressively lower quality settings
+                const qualityLevels = [0.7, 0.5, 0.3, 0.2];
+                for (const testQuality of qualityLevels) {
+                    if (testQuality >= originalQuality) continue;
+                    
+                    const testCompressed = await this.compressImageWithIdleCallback(this.originalImage, testQuality, format);
+                    const testSize = this.getDataUrlSize(testCompressed);
+                    
+                    console.log(`Testing quality ${testQuality}: original=${this.originalFile.size}, compressed=${testSize}`);
+                    
+                    if (testSize < this.originalFile.size) {
+                        compressedDataUrl = testCompressed;
+                        compressedSize = testSize;
+                        finalQuality = testQuality;
+                        console.log(`Found better compression at quality ${testQuality}`);
+                        break;
+                    }
+                }
+            }
             
             // Create compressed image object
             const compressedImg = new Image();
@@ -602,6 +820,12 @@ class ImageCompressor {
     async compressFile(file, quality, format) {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            
+            // Safari iOS specific fixes
+            if (this.isSafariIOS) {
+                img.crossOrigin = 'anonymous';
+            }
+            
             img.onload = async () => {
                 try {
                     // Use main thread compression only (Service Worker disabled)
@@ -627,25 +851,31 @@ class ImageCompressor {
                 }
             };
             
-            img.onerror = () => {
-                reject(new Error('Failed to load image'));
+            img.onerror = (error) => {
+                console.error('Failed to load image in batch processing:', file.name, error);
+                reject(new Error(`Failed to load image: ${file.name}`));
             };
             
-            img.src = URL.createObjectURL(file);
+            try {
+                img.src = URL.createObjectURL(file);
+            } catch (error) {
+                console.error('Error creating object URL in batch processing:', error);
+                reject(new Error(`Error processing image: ${file.name}`));
+            }
         });
     }
     
     // Break compression into smaller chunks using idle callbacks
     compressImageWithIdleCallback(image, quality, format) {
         return new Promise((resolve) => {
-            if (window.requestIdleCallback) {
+            if (typeof window.requestIdleCallback !== 'undefined') {
                 // Use idle callback to avoid blocking main thread
                 window.requestIdleCallback(() => {
                     const result = this.compressImageData(image, quality, format);
                     resolve(result);
                 }, { timeout: 5000 });
             } else {
-                // Fallback for browsers without requestIdleCallback
+                // Fallback for browsers without requestIdleCallback (Safari iOS)
                 setTimeout(() => {
                     const result = this.compressImageData(image, quality, format);
                     resolve(result);
@@ -656,23 +886,58 @@ class ImageCompressor {
 
     compressImageData(image, quality, format) {
         return new Promise((resolve) => {
+            console.log('Starting compression:', {
+                originalWidth: image.width,
+                originalHeight: image.height,
+                quality: quality,
+                format: format,
+                isSafariIOS: this.isSafariIOS,
+                originalFormat: this.originalFile ? this.originalFile.type : 'unknown'
+            });
+            
             // Use pre-created canvas to avoid DOM creation overhead
             this.canvas.width = image.width;
             this.canvas.height = image.height;
             
+            // Clear canvas first (important for Safari iOS)
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Safari iOS specific optimizations
+            if (this.isSafariIOS) {
+                // Set image smoothing for better compression
+                this.ctx.imageSmoothingEnabled = true;
+                this.ctx.imageSmoothingQuality = 'high';
+            }
+            
             // Draw image on canvas
             this.ctx.drawImage(image, 0, 0);
             
-            // Convert to desired format
+            // Convert to desired format (JPEG or WebP only)
             const mimeTypes = {
                 'jpeg': 'image/jpeg',
-                'png': 'image/png',
                 'webp': 'image/webp'
             };
             const mimeType = mimeTypes[format] || 'image/jpeg';
             
-            // Generate compressed data URL
+            console.log('Canvas dimensions:', {
+                width: this.canvas.width,
+                height: this.canvas.height
+            });
+            
+            // Generate compressed data URL (both JPEG and WebP use quality parameter)
             const dataUrl = this.canvas.toDataURL(mimeType, quality);
+            
+            // Calculate compressed size
+            const compressedSize = this.getDataUrlSize(dataUrl);
+            console.log('Compression result:', {
+                originalSize: this.originalFile ? this.originalFile.size : 'unknown',
+                compressedSize: compressedSize,
+                dataUrlLength: dataUrl.length,
+                mimeType: mimeType,
+                quality: quality,
+                formatChange: this.originalFile ? (this.originalFile.type !== mimeType) : false
+            });
+            
             resolve(dataUrl);
         });
     }
@@ -705,8 +970,40 @@ class ImageCompressor {
         const reductionPercent = ((sizeReductionBytes / originalSize) * 100).toFixed(1);
         const compressionRatioValue = (originalSize / compressedSizeBytes).toFixed(1);
         
-        sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReductionBytes)})`;
-        compressionRatio.textContent = `${compressionRatioValue}:1`;
+        // Check if compression actually reduced file size
+        if (compressedSizeBytes >= originalSize) {
+            console.warn('Compression resulted in larger file size!', {
+                originalSize: originalSize,
+                compressedSize: compressedSizeBytes,
+                increase: compressedSizeBytes - originalSize,
+                format: this.elements.formatSelect.value,
+                originalFormat: this.originalFile.type
+            });
+            
+            // Show warning message with format-specific advice
+            let warningMessage;
+            if (this.elements.formatSelect.value === 'webp') {
+                warningMessage = `⚠️ WebP conversion increased file size by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))}). WebP compression may not work well with this image. Try using JPEG format instead.`;
+            } else {
+                warningMessage = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))}). This can happen with certain image types or when using high quality settings. Try lowering the quality slider or changing the output format.`;
+            }
+            
+            // Show warning message
+            sizeReduction.textContent = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))})`;
+            sizeReduction.style.color = '#dc3545'; // Red color for warning
+            
+            compressionRatio.textContent = `1:${compressionRatioValue}`;
+            compressionRatio.style.color = '#dc3545';
+            
+            // Show helpful message
+            this.showError(warningMessage);
+        } else {
+            // Normal compression success
+            sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReductionBytes)})`;
+            sizeReduction.style.color = '#28a745'; // Green color for success
+            compressionRatio.textContent = `${compressionRatioValue}:1`;
+            compressionRatio.style.color = '#28a745';
+        }
         
         // Store compressed data for download
         this.compressedDataUrl = compressedDataUrl;
@@ -960,7 +1257,7 @@ class ImageCompressor {
                 }, 300);
             };
             
-            if (window.requestIdleCallback) {
+            if (typeof window.requestIdleCallback !== 'undefined') {
                 window.requestIdleCallback(() => {
                     setTimeout(removeError, 5000);
                 });
@@ -974,12 +1271,12 @@ class ImageCompressor {
 // Optimized initialization with minimal main-thread impact
 function initializeApp() {
     // Use requestIdleCallback for initialization if available
-    if (window.requestIdleCallback) {
+    if (typeof window.requestIdleCallback !== 'undefined') {
         window.requestIdleCallback(() => {
             new ImageCompressor();
         }, { timeout: 2000 });
     } else {
-        // Fallback: use setTimeout to defer initialization
+        // Fallback: use setTimeout to defer initialization (Safari iOS compatible)
         setTimeout(() => {
             new ImageCompressor();
         }, 0);
