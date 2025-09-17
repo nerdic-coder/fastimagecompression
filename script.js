@@ -646,15 +646,41 @@ class ImageCompressor {
         compressBtn.disabled = true;
 
         try {
-            const quality = parseInt(qualitySlider.value) / 100;
+            const originalQuality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
             
             // Update progress for single image
             this.updateImageStatus(0, 'processing');
             
-            // Use main thread compression only (Service Worker disabled)
-            let compressedDataUrl;
-            compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, quality, format);
+            // Try compression with original settings first
+            let compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, originalQuality, format);
+            let compressedSize = this.getDataUrlSize(compressedDataUrl);
+            let finalQuality = originalQuality;
+            
+            // If compression resulted in larger file, try with lower quality
+            if (compressedSize >= this.originalFile.size && originalQuality > 0.3) {
+                console.log('Compression increased file size, trying lower quality...');
+                compressBtn.innerHTML = '<div class="loading"></div> Optimizing compression...';
+                
+                // Try progressively lower quality settings
+                const qualityLevels = [0.7, 0.5, 0.3, 0.2];
+                for (const testQuality of qualityLevels) {
+                    if (testQuality >= originalQuality) continue;
+                    
+                    const testCompressed = await this.compressImageWithIdleCallback(this.originalImage, testQuality, format);
+                    const testSize = this.getDataUrlSize(testCompressed);
+                    
+                    console.log(`Testing quality ${testQuality}: original=${this.originalFile.size}, compressed=${testSize}`);
+                    
+                    if (testSize < this.originalFile.size) {
+                        compressedDataUrl = testCompressed;
+                        compressedSize = testSize;
+                        finalQuality = testQuality;
+                        console.log(`Found better compression at quality ${testQuality}`);
+                        break;
+                    }
+                }
+            }
             
             // Create compressed image object
             const compressedImg = new Image();
@@ -797,9 +823,27 @@ class ImageCompressor {
 
     compressImageData(image, quality, format) {
         return new Promise((resolve) => {
+            console.log('Starting compression:', {
+                originalWidth: image.width,
+                originalHeight: image.height,
+                quality: quality,
+                format: format,
+                isSafariIOS: this.isSafariIOS
+            });
+            
             // Use pre-created canvas to avoid DOM creation overhead
             this.canvas.width = image.width;
             this.canvas.height = image.height;
+            
+            // Clear canvas first (important for Safari iOS)
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Safari iOS specific optimizations
+            if (this.isSafariIOS) {
+                // Set image smoothing for better compression
+                this.ctx.imageSmoothingEnabled = true;
+                this.ctx.imageSmoothingQuality = 'high';
+            }
             
             // Draw image on canvas
             this.ctx.drawImage(image, 0, 0);
@@ -812,8 +856,24 @@ class ImageCompressor {
             };
             const mimeType = mimeTypes[format] || 'image/jpeg';
             
+            console.log('Canvas dimensions:', {
+                width: this.canvas.width,
+                height: this.canvas.height
+            });
+            
             // Generate compressed data URL
             const dataUrl = this.canvas.toDataURL(mimeType, quality);
+            
+            // Calculate compressed size
+            const compressedSize = this.getDataUrlSize(dataUrl);
+            console.log('Compression result:', {
+                originalSize: this.originalFile ? this.originalFile.size : 'unknown',
+                compressedSize: compressedSize,
+                dataUrlLength: dataUrl.length,
+                mimeType: mimeType,
+                quality: quality
+            });
+            
             resolve(dataUrl);
         });
     }
@@ -846,8 +906,30 @@ class ImageCompressor {
         const reductionPercent = ((sizeReductionBytes / originalSize) * 100).toFixed(1);
         const compressionRatioValue = (originalSize / compressedSizeBytes).toFixed(1);
         
-        sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReductionBytes)})`;
-        compressionRatio.textContent = `${compressionRatioValue}:1`;
+        // Check if compression actually reduced file size
+        if (compressedSizeBytes >= originalSize) {
+            console.warn('Compression resulted in larger file size!', {
+                originalSize: originalSize,
+                compressedSize: compressedSizeBytes,
+                increase: compressedSizeBytes - originalSize
+            });
+            
+            // Show warning message
+            sizeReduction.textContent = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))})`;
+            sizeReduction.style.color = '#dc3545'; // Red color for warning
+            
+            compressionRatio.textContent = `1:${compressionRatioValue}`;
+            compressionRatio.style.color = '#dc3545';
+            
+            // Show helpful message
+            this.showError('The compressed image is larger than the original. This can happen with certain image types or when using high quality settings. Try lowering the quality slider or changing the output format to JPEG.');
+        } else {
+            // Normal compression success
+            sizeReduction.textContent = `${reductionPercent}% (${this.formatFileSize(sizeReductionBytes)})`;
+            sizeReduction.style.color = '#28a745'; // Green color for success
+            compressionRatio.textContent = `${compressionRatioValue}:1`;
+            compressionRatio.style.color = '#28a745';
+        }
         
         // Store compressed data for download
         this.compressedDataUrl = compressedDataUrl;
