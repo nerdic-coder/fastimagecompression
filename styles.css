@@ -202,6 +202,97 @@ body {
     font-size: 1rem;
 }
 
+.mobile-upload-wrapper {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.mobile-upload-button {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 10px 20px rgba(118, 75, 162, 0.25);
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    justify-content: center;
+    width: 100%;
+}
+
+.mobile-upload-button i {
+    font-size: 1rem;
+}
+
+.mobile-upload-button:focus,
+.mobile-upload-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(118, 75, 162, 0.3);
+    outline: none;
+}
+
+.mobile-upload-button:active {
+    transform: translateY(1px);
+}
+
+.upload-area.touch-device .mobile-upload-wrapper {
+    position: relative;
+    clip: auto;
+    width: 100%;
+    height: auto;
+    margin: 1.5rem 0 0;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    white-space: normal;
+    min-height: 3.25rem;
+}
+
+.upload-area.touch-device .mobile-upload-button {
+    display: inline-flex;
+}
+
+.upload-area.touch-device {
+    cursor: default;
+}
+
+.file-input {
+    font-size: 16px;
+}
+
+.file-input-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.mobile-upload-wrapper .file-input-touch {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.01;
+    cursor: pointer;
+}
+
 .multi-file-hint {
     display: block;
     color: #667eea;
