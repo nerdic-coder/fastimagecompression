@@ -70,7 +70,8 @@ describe('Image Compression E2E Tests (Docker)', () => {
 
     const downloadBtn = await page.$('#downloadBtn');
     expect(downloadBtn).toBeTruthy();
-    expect(await downloadBtn.isEnabled()).toBe(true);
+    const isEnabled = await page.evaluate(el => !el.disabled, downloadBtn);
+    expect(isEnabled).toBe(true);
     
     console.log('✓ Single image compression completed');
   });
