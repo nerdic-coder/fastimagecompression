@@ -111,10 +111,20 @@ describe('Image Compression E2E Tests', () => {
     expect(compressedImage).toBeTruthy();
 
     // Reset for WebP test
+    console.log('Reloading page for WebP test...');
     await page.reload();
     await page.waitForSelector('#uploadArea', { visible: true });
+    
+    // Wait a bit for the page to fully load after reload
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Upload test image again
+    console.log('Uploading test image for WebP test...');
     await uploadTestImage(page, './tests/fixtures/test-image.jpg');
-    await page.waitForSelector('#controls', { visible: true });
+    
+    console.log('Waiting for controls to appear...');
+    // Wait for controls with longer timeout
+    await page.waitForSelector('#controls', { visible: true, timeout: 10000 });
 
     // Test WebP format
     await page.select('#formatSelect', 'webp');

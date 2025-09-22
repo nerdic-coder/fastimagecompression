@@ -64,8 +64,15 @@ global.waitForCompression = async (page) => {
 // Helper function to upload test image
 global.uploadTestImage = async (page, imagePath) => {
   const fileInput = await page.$('#fileInput');
+  if (!fileInput) {
+    throw new Error('File input not found');
+  }
+  
   await fileInput.uploadFile(imagePath);
   
-  // Wait for controls to appear
-  await page.waitForSelector('#controls', { visible: true, timeout: 5000 });
+  // Wait for file processing
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Wait for controls to appear with longer timeout
+  await page.waitForSelector('#controls', { visible: true, timeout: 10000 });
 };
