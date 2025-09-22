@@ -52,7 +52,11 @@ describe('Image Compression E2E Tests (Docker)', () => {
     await page.waitForSelector('#controls', { visible: true, timeout: 10000 });
 
     // Set compression quality
-    await page.select('#qualitySlider', '80');
+    await page.evaluate(() => {
+      const slider = document.getElementById('qualitySlider');
+      slider.value = '80';
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+    });
 
     // Click compress button
     await page.click('#compressBtn');

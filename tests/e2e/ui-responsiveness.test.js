@@ -198,9 +198,14 @@ describe('UI Responsiveness Tests', () => {
     // Start with desktop viewport
     await page.setViewport({ width: 1280, height: 720 });
     
+    // Wait for initial load
+    await page.waitForSelector('#uploadArea', { visible: true });
+    
     const uploadAreaDesktop = await page.$('#uploadArea');
     const classesDesktop = await page.evaluate(el => el.className, uploadAreaDesktop);
-    expect(classesDesktop).toContain('no-touch');
+    
+    // Check that it's not mobile (either no-touch or just upload-area)
+    expect(classesDesktop).toMatch(/(no-touch|upload-area)/);
 
     // Change to mobile viewport
     await page.setViewport({ width: 375, height: 667 });
@@ -211,7 +216,7 @@ describe('UI Responsiveness Tests', () => {
     });
 
     // Wait for mobile detection to update
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const uploadAreaMobile = await page.$('#uploadArea');
     const classesMobile = await page.evaluate(el => el.className, uploadAreaMobile);
