@@ -78,7 +78,7 @@ describe('Image Compression E2E Tests (Docker)', () => {
     await page.click('#uploadArea');
     
     // Wait a moment for any file picker to appear
-    await page.waitForTimeout(1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Check if controls appeared (indicating file was selected)
     // This test mainly verifies the click doesn't crash the app

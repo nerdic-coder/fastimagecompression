@@ -45,7 +45,7 @@ global.uploadTestImage = async (page, imagePath) => {
   await fileInput.uploadFile(imagePath);
   
   // Wait for file processing
-  await page.waitForTimeout(1000);
+  await new Promise(resolve => setTimeout(resolve, 1000));
 };
 
 // Helper function to wait for compression to complete

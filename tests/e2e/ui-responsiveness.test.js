@@ -197,7 +197,7 @@ describe('UI Responsiveness Tests', () => {
     });
 
     // Wait for mobile detection to update
-    await page.waitForTimeout(100);
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const uploadAreaMobile = await page.$('#uploadArea');
     const classesMobile = await page.evaluate(el => el.className, uploadAreaMobile);

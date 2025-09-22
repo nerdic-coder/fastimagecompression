@@ -158,7 +158,7 @@ describe('Image Compression E2E Tests', () => {
     });
 
     // Wait a bit for error handling
-    await page.waitForTimeout(1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Check that controls don't appear for invalid files
     const controls = await page.$('#controls');
