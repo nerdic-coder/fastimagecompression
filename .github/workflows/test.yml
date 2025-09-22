@@ -58,7 +58,7 @@ jobs:
         CI: true
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: test-results
@@ -94,7 +94,7 @@ jobs:
         LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
     
     - name: Upload Lighthouse results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lighthouse-results
         path: .lighthouseci/
