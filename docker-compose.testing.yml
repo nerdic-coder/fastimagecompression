@@ -1,0 +1,47 @@
+# Docker Compose for safe E2E testing
+version: '3.8'
+
+services:
+  # Test server
+  test-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.testing
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - CI=true
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+    command: npm run serve
+    networks:
+      - test-network
+
+  # E2E tests
+  e2e-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.testing
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./test-results:/app/test-results
+    environment:
+      - CI=true
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - TEST_SERVER_URL=http://test-server:8000
+    depends_on:
+      - test-server
+    command: npm run test:e2e
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  node_modules:
+
