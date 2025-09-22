@@ -90,6 +90,5 @@ global.logMemoryUsage = () => {
   });
 };
 
-// Log memory usage every 30 seconds during tests
-setInterval(global.logMemoryUsage, 30000);
+// Memory logging removed to prevent Jest "Cannot log after tests are done" error
 
