@@ -10,9 +10,6 @@
 
       gtag('config', 'G-91HBJJKFPS');
     </script>
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9903523261777140"
-         crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fast Image Compression | fastimagecompression.com</title>
@@ -51,7 +48,7 @@
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <link rel="dns-prefetch" href="//www.googletagmanager.com">
-    <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
+    
     
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -129,6 +126,23 @@
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
+
+        /* Recommended tools widget - lightweight styles */
+        .recommended-tools { margin-top: 2rem; }
+        .recommended-tools h3 { font-size: 1.25rem; color: #333; margin-bottom: 0.75rem; }
+        .recommended-tools .tool-card { background: #fff; border-radius: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.06); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .recommended-tools .tool-card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,0.08); }
+        .recommended-tools .tool-link { display: block; line-height: 0; }
+        .recommended-tools .tool-link img { display: block; width: 100%; height: auto; }
+
+        /* Match gradient heading style like "Why" section */
+        .features h3,
+        .recommended-tools h3 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
     </style>
     
     <!-- Load non-critical CSS asynchronously -->
@@ -161,6 +175,7 @@
             opacity: 1;
         }
     </style>
+    <meta name='impact-site-verification' value='97d07485-e6bc-4192-b90c-cfd4c4f17319'>
 </head>
 <body>
     <!-- Header -->
@@ -384,6 +399,16 @@
                         <h4>100% Free Image Size Reducer</h4>
                         <p>No registration required. No hidden fees. Minimize photo size as much as you want - completely free.</p>
                     </div>
+                </div>
+            </section>
+
+            <!-- Recommended Tools -->
+            <section class="recommended-tools" aria-labelledby="recommended-tools-title">
+                <h3 id="recommended-tools-title">Recommended Tools</h3>
+                <div class="tool-card">
+                    <a class="tool-link" href="https://tiny-img.com?ref=the_nerdic_coder" target="_blank" rel="noopener nofollow sponsored">
+                        <img src="tinyimg-banner-6.png" alt="TinyIMG – SEO + Speed & Image optimizer">
+                    </a>
                 </div>
             </section>
         </div>
