@@ -1,6 +1,6 @@
 # Fast Image Compression Website
 
-A lightning-fast, modern, responsive web application for compressing images online with a beautiful UI and AdSense ad integration.
+A lightning-fast, modern, responsive web application for compressing images online with a beautiful UI.
 
 **🌐 Live at: [fastimagecompression.com](https://fastimagecompression.com)**
 
@@ -14,7 +14,7 @@ A lightning-fast, modern, responsive web application for compressing images onli
 - **Compression Stats**: Detailed file size reduction and compression ratio
 - **Privacy First**: All processing happens in the browser - no server uploads
 - **Mobile Responsive**: Works perfectly on all devices
-- **AdSense Ready**: Strategic ad placements for monetization
+
 
 ## How to Use
 
@@ -31,17 +31,7 @@ A lightning-fast, modern, responsive web application for compressing images onli
 - **Max File Size**: 10MB
 - **Max Dimensions**: No limit (processed in browser)
 
-## AdSense Integration
 
-The website includes strategic ad placements:
-- Top banner (728x90)
-- Sidebar ad (300x250) - desktop only
-- Bottom banner (728x90)
-
-To integrate with AdSense:
-1. Replace ad placeholders with actual AdSense code
-2. Update the ad container divs with your AdSense unit codes
-3. Ensure compliance with AdSense policies
 
 ## Technical Details
 
@@ -123,7 +113,7 @@ Then visit: `http://localhost:8000`
 - **Font Loading**: External fonts (Google Fonts) load properly
 - **Performance Testing**: More accurate performance measurements
 - **Development Tools**: Better debugging and testing capabilities
-- **AdSense Testing**: AdSense requires HTTPS or localhost for testing
+
 
 ### Testing Performance Optimizations
 
@@ -136,7 +126,7 @@ After implementing performance optimizations, test with:
 ## Customization
 
 - Modify colors in `styles.css`
-- Adjust ad placements in `index.html`
+
 - Add analytics tracking in `script.js`
 - Customize compression algorithms as needed
 
