@@ -126,6 +126,14 @@
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
+
+        /* Recommended tools widget - lightweight styles */
+        .recommended-tools { margin-top: 2rem; }
+        .recommended-tools h3 { font-size: 1.25rem; color: #333; margin-bottom: 0.75rem; }
+        .recommended-tools .tool-card { background: #fff; border-radius: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.06); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .recommended-tools .tool-card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(0,0,0,0.08); }
+        .recommended-tools .tool-link { display: block; line-height: 0; }
+        .recommended-tools .tool-link img { display: block; width: 100%; height: auto; }
     </style>
     
     <!-- Load non-critical CSS asynchronously -->
@@ -327,6 +335,16 @@
                             Download All Compressed Images
                         </button>
                     </div>
+                </div>
+            </section>
+
+            <!-- Recommended Tools -->
+            <section class="recommended-tools" aria-labelledby="recommended-tools-title">
+                <h3 id="recommended-tools-title">Recommended Tools</h3>
+                <div class="tool-card">
+                    <a class="tool-link" href="https://tiny-img.com?ref=the_nerdic_coder" target="_blank" rel="noopener nofollow sponsored">
+                        <img src="tinyimg-banner-6.png" alt="TinyIMG – SEO + Speed & Image optimizer">
+                    </a>
                 </div>
             </section>
 
