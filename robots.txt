@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Sitemap location for Google and other bots
+Sitemap: https://fastimagecompression.com/sitemap.xml
+
