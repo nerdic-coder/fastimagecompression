@@ -260,7 +260,7 @@ describe('Image Compression E2E Tests', () => {
     await firstQuestion.click();
     
     // Wait a bit for the toggle to complete
-    await page.waitForTimeout(100);
+    await new Promise(r => setTimeout(r, 100));
 
     // Check that the answer is now visible
     const expandedDisplay = await page.evaluate(el => {
@@ -282,7 +282,7 @@ describe('Image Compression E2E Tests', () => {
 
     // Click the question again to close it
     await firstQuestion.click();
-    await page.waitForTimeout(100);
+    await new Promise(r => setTimeout(r, 100));
 
     // Check that the answer is hidden again
     const closedDisplay = await page.evaluate(el => {
@@ -313,7 +313,7 @@ describe('Image Compression E2E Tests', () => {
 
     // Click first question
     await faqQuestions[0].click();
-    await page.waitForTimeout(100);
+    await new Promise(r => setTimeout(r, 100));
 
     // Verify first answer is open
     const firstAnswer = await page.$('#faq-answer-1');
@@ -324,7 +324,7 @@ describe('Image Compression E2E Tests', () => {
 
     // Click second question
     await faqQuestions[1].click();
-    await page.waitForTimeout(100);
+    await new Promise(r => setTimeout(r, 100));
 
     // Verify first answer is now closed
     const firstAnswerDisplayAfter = await page.evaluate(el => {
@@ -353,7 +353,7 @@ describe('Image Compression E2E Tests', () => {
     
     // Press Enter key
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(100);
+    await new Promise(r => setTimeout(r, 100));
 
     // Check that the answer is visible
     const answerDisplay = await page.evaluate(el => {
@@ -363,7 +363,7 @@ describe('Image Compression E2E Tests', () => {
 
     // Press Enter again to close
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(100);
+    await new Promise(r => setTimeout(r, 100));
 
     // Check that the answer is hidden
     const answerDisplayClosed = await page.evaluate(el => {

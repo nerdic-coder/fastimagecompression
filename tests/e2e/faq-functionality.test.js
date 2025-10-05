@@ -1,6 +1,7 @@
 // End-to-end tests for FAQ functionality
 describe('FAQ Functionality E2E Tests', () => {
   let browser, page;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   beforeAll(async () => {
     const testPage = await createTestPage();
@@ -56,7 +57,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Click the question
     await firstQuestion.click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that the answer is now visible
     const expandedDisplay = await page.evaluate(el => {
@@ -84,7 +85,7 @@ describe('FAQ Functionality E2E Tests', () => {
     
     // Open the FAQ first
     await firstQuestion.click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Verify it's open
     const openDisplay = await page.evaluate(el => {
@@ -122,7 +123,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Open first question
     await faqQuestions[0].click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Verify first answer is open
     const firstAnswer = await page.$('#faq-answer-1');
@@ -133,7 +134,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Open second question
     await faqQuestions[1].click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Verify first answer is now closed
     const firstAnswerDisplayAfter = await page.evaluate(el => {
@@ -159,7 +160,7 @@ describe('FAQ Functionality E2E Tests', () => {
     
     // Press Enter to open
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that answer is visible
     const answerDisplay = await page.evaluate(el => {
@@ -169,7 +170,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Press Enter again to close
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that answer is hidden
     const answerDisplayClosed = await page.evaluate(el => {
@@ -188,7 +189,7 @@ describe('FAQ Functionality E2E Tests', () => {
     
     // Press Space to open
     await page.keyboard.press('Space');
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that answer is visible
     const answerDisplay = await page.evaluate(el => {
@@ -198,7 +199,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Press Space again to close
     await page.keyboard.press('Space');
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that answer is hidden
     const answerDisplayClosed = await page.evaluate(el => {
@@ -262,7 +263,7 @@ describe('FAQ Functionality E2E Tests', () => {
     
     // Test touch interaction
     await firstQuestion.click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that answer is visible on mobile
     const answerDisplay = await page.evaluate(el => {
@@ -292,7 +293,7 @@ describe('FAQ Functionality E2E Tests', () => {
     // Open first FAQ
     const firstQuestion = await page.$('.faq-question');
     await firstQuestion.click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Verify it's open
     const firstAnswer = await page.$('#faq-answer-1');
