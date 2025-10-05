@@ -233,4 +233,179 @@ describe('Image Compression E2E Tests', () => {
     const isEnabled = await page.evaluate(el => !el.disabled, downloadBtn);
     expect(isEnabled).toBe(true);
   });
+
+  test('should toggle FAQ section visibility properly', async () => {
+    // Wait for FAQ section to load
+    await page.waitForSelector('.faq-section', { visible: true });
+    
+    // Check that FAQ section exists
+    const faqSection = await page.$('.faq-section');
+    expect(faqSection).toBeTruthy();
+
+    // Get all FAQ questions
+    const faqQuestions = await page.$$('.faq-question');
+    expect(faqQuestions.length).toBeGreaterThan(0);
+
+    // Test first FAQ question
+    const firstQuestion = faqQuestions[0];
+    const firstAnswer = await page.$('#faq-answer-1');
+    
+    // Initially, the answer should be hidden
+    const initialDisplay = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(initialDisplay).toBe('none');
+
+    // Click the first question
+    await firstQuestion.click();
+    
+    // Wait a bit for the toggle to complete
+    await new Promise(r => setTimeout(r, 100));
+
+    // Check that the answer is now visible
+    const expandedDisplay = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(expandedDisplay).toBe('block');
+
+    // Check that aria-expanded is set to true
+    const ariaExpanded = await page.evaluate(el => {
+      return el.getAttribute('aria-expanded');
+    }, firstQuestion);
+    expect(ariaExpanded).toBe('true');
+
+    // Check that the answer has the active class
+    const hasActiveClass = await page.evaluate(el => {
+      return el.classList.contains('active');
+    }, firstAnswer);
+    expect(hasActiveClass).toBe(true);
+
+    // Click the question again to close it
+    await firstQuestion.click();
+    await new Promise(r => setTimeout(r, 100));
+
+    // Check that the answer is hidden again
+    const closedDisplay = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(closedDisplay).toBe('none');
+
+    // Check that aria-expanded is set to false
+    const ariaExpandedClosed = await page.evaluate(el => {
+      return el.getAttribute('aria-expanded');
+    }, firstQuestion);
+    expect(ariaExpandedClosed).toBe('false');
+
+    // Check that the answer no longer has the active class
+    const hasActiveClassClosed = await page.evaluate(el => {
+      return el.classList.contains('active');
+    }, firstAnswer);
+    expect(hasActiveClassClosed).toBe(false);
+  });
+
+  test('should ensure only one FAQ item is open at a time', async () => {
+    // Wait for FAQ section to load
+    await page.waitForSelector('.faq-section', { visible: true });
+    
+    // Get FAQ questions
+    const faqQuestions = await page.$$('.faq-question');
+    expect(faqQuestions.length).toBeGreaterThan(1);
+
+    // Click first question
+    await faqQuestions[0].click();
+    await new Promise(r => setTimeout(r, 100));
+
+    // Verify first answer is open
+    const firstAnswer = await page.$('#faq-answer-1');
+    const firstAnswerDisplay = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(firstAnswerDisplay).toBe('block');
+
+    // Click second question
+    await faqQuestions[1].click();
+    await new Promise(r => setTimeout(r, 100));
+
+    // Verify first answer is now closed
+    const firstAnswerDisplayAfter = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(firstAnswerDisplayAfter).toBe('none');
+
+    // Verify second answer is open
+    const secondAnswer = await page.$('#faq-answer-2');
+    const secondAnswerDisplay = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, secondAnswer);
+    expect(secondAnswerDisplay).toBe('block');
+  });
+
+  test('should support keyboard navigation for FAQ', async () => {
+    // Wait for FAQ section to load
+    await page.waitForSelector('.faq-section', { visible: true });
+    
+    // Get first FAQ question
+    const firstQuestion = await page.$('.faq-question');
+    const firstAnswer = await page.$('#faq-answer-1');
+    
+    // Focus on the first question
+    await firstQuestion.focus();
+    
+    // Press Enter key
+    await page.keyboard.press('Enter');
+    await new Promise(r => setTimeout(r, 100));
+
+    // Check that the answer is visible
+    const answerDisplay = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(answerDisplay).toBe('block');
+
+    // Press Enter again to close
+    await page.keyboard.press('Enter');
+    await new Promise(r => setTimeout(r, 100));
+
+    // Check that the answer is hidden
+    const answerDisplayClosed = await page.evaluate(el => {
+      return window.getComputedStyle(el).display;
+    }, firstAnswer);
+    expect(answerDisplayClosed).toBe('none');
+  });
+
+  test('should have proper FAQ content and structure', async () => {
+    // Wait for FAQ section to load
+    await page.waitForSelector('.faq-section', { visible: true });
+    
+    // Check FAQ title
+    const faqTitle = await page.$('#faq-title');
+    expect(faqTitle).toBeTruthy();
+    
+    const titleText = await page.evaluate(el => el.textContent, faqTitle);
+    expect(titleText).toBe('Frequently Asked Questions');
+
+    // Check that we have FAQ questions
+    const faqQuestions = await page.$$('.faq-question');
+    expect(faqQuestions.length).toBe(10); // We have 10 FAQ questions
+
+    // Check that each question has proper structure
+    for (let i = 0; i < faqQuestions.length; i++) {
+      const question = faqQuestions[i];
+      const answer = await page.$(`#faq-answer-${i + 1}`);
+      
+      // Check aria-expanded attribute
+      const ariaExpanded = await page.evaluate(el => {
+        return el.getAttribute('aria-expanded');
+      }, question);
+      expect(ariaExpanded).toBe('false');
+
+      // Check aria-controls attribute
+      const ariaControls = await page.evaluate(el => {
+        return el.getAttribute('aria-controls');
+      }, question);
+      expect(ariaControls).toBe(`faq-answer-${i + 1}`);
+
+      // Check that answer exists
+      expect(answer).toBeTruthy();
+    }
+  });
 });

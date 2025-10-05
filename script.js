@@ -32,6 +32,11 @@ class ImageCompressor {
         this.bindEvents();
         this.preCreateCanvas();
         this.detectSafariAndApplyFixes();
+        
+        // Initialize FAQ after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            this.initializeFAQ();
+        }, 100);
     }
     
     detectSafariAndApplyFixes() {
@@ -1264,6 +1269,80 @@ class ImageCompressor {
             } else {
                 setTimeout(removeError, 5000);
             }
+        });
+    }
+
+    // FAQ Functionality
+    initializeFAQ() {
+        // Wait for DOM to be fully ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupFAQ());
+        } else {
+            this.setupFAQ();
+        }
+    }
+    
+    setupFAQ() {
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        
+        if (faqQuestions.length === 0) {
+            setTimeout(() => this.setupFAQ(), 500);
+            return;
+        }
+        
+        faqQuestions.forEach((question, index) => {
+            // Store the question element
+            const q = question;
+            const i = index;
+            
+            // Simple toggle function
+            function toggle() {
+                const answer = q.nextElementSibling;
+                const isExpanded = q.getAttribute('aria-expanded') === 'true';
+                
+                // Close all other FAQ items
+                faqQuestions.forEach(otherQuestion => {
+                    if (otherQuestion !== q) {
+                        otherQuestion.setAttribute('aria-expanded', 'false');
+                        otherQuestion.nextElementSibling.classList.remove('active');
+                    }
+                });
+                
+                // Toggle current FAQ item
+                if (isExpanded) {
+                    q.setAttribute('aria-expanded', 'false');
+                    answer.classList.remove('active');
+                } else {
+                    q.setAttribute('aria-expanded', 'true');
+                    answer.classList.add('active');
+                }
+            }
+            
+            // Direct onclick assignment (most compatible)
+            q.onclick = function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggle();
+                return false;
+            };
+            
+            // Backup with addEventListener
+            q.addEventListener('click', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggle();
+            }, true);
+            
+            // Add keyboard support
+            question.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13 || e.keyCode === 32) {
+                    e.preventDefault();
+                    question.click();
+                }
+            });
+            
+            // Ensure the button is focusable
+            question.setAttribute('tabindex', '0');
         });
     }
 }
