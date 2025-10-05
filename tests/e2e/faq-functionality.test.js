@@ -95,7 +95,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Click again to close
     await firstQuestion.click();
-    await page.waitForTimeout(200);
+    await sleep(200);
 
     // Check that it's closed
     const closedDisplay = await page.evaluate(el => {
@@ -304,7 +304,7 @@ describe('FAQ Functionality E2E Tests', () => {
 
     // Scroll to top of page
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(100);
+    await sleep(100);
 
     // Verify FAQ is still open
     const isStillOpen = await page.evaluate(el => {
