@@ -1297,7 +1297,6 @@ class ImageCompressor {
             
             // Simple toggle function
             function toggle() {
-                console.log('FAQ toggle called for question', i + 1);
                 const answer = q.nextElementSibling;
                 const isExpanded = q.getAttribute('aria-expanded') === 'true';
                 
@@ -1313,17 +1312,14 @@ class ImageCompressor {
                 if (isExpanded) {
                     q.setAttribute('aria-expanded', 'false');
                     answer.classList.remove('active');
-                    console.log('FAQ closed');
                 } else {
                     q.setAttribute('aria-expanded', 'true');
                     answer.classList.add('active');
-                    console.log('FAQ opened');
                 }
             }
             
             // Direct onclick assignment (most compatible)
             q.onclick = function(event) {
-                console.log('Direct onclick triggered');
                 event.preventDefault();
                 event.stopPropagation();
                 toggle();
@@ -1332,7 +1328,6 @@ class ImageCompressor {
             
             // Backup with addEventListener
             q.addEventListener('click', function(event) {
-                console.log('addEventListener click triggered');
                 event.preventDefault();
                 event.stopPropagation();
                 toggle();
