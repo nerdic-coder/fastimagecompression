@@ -6,6 +6,51 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://fastimagecompression.com/compress-jpeg.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-png.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-gif.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-webp.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/guides.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/guide-jpeg-vs-png-webp.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/guide-lossy-vs-lossless.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/guide-choose-image-quality.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/guide-image-optimization-checklist.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://fastimagecompression.com/privacy-policy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
@@ -16,4 +61,3 @@
     <priority>0.3</priority>
   </url>
 </urlset>
-
