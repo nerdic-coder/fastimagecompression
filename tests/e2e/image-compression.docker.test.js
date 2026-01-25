@@ -33,7 +33,7 @@ describe('Image Compression E2E Tests (Docker)', () => {
     const title = await page.title();
     expect(title).toContain('Fast Image Compression');
 
-    const header = await page.$('.logo h1');
+    const header = await page.$('.logo .logo-text');
     expect(header).toBeTruthy();
 
     const uploadArea = await page.$('#uploadArea');
@@ -152,4 +152,3 @@ describe('Image Compression E2E Tests (Docker)', () => {
     console.log('✓ Mobile responsiveness working');
   });
 });
-

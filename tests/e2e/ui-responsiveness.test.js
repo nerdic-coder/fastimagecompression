@@ -43,7 +43,7 @@ describe('UI Responsiveness Tests', () => {
     await page.setViewport({ width: 768, height: 1024 });
 
     // Check that layout adapts
-    const hero = await page.$('.hero h2');
+    const hero = await page.$('.hero h1');
     expect(hero).toBeTruthy();
 
     const uploadArea = await page.$('#uploadArea');
