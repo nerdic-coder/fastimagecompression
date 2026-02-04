@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-91HBJJKFPS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-91HBJJKFPS');
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images and Core Web Vitals: Practical Optimization</title>
+    <meta name="description" content="How images affect LCP, CLS, and INP — and what to do about it (formats, dimensions, lazy-loading, and compression)." />
+    <link rel="canonical" href="https://fastimagecompression.com/guide-core-web-vitals-images.html">
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fastimagecompression.com/guide-core-web-vitals-images.html">
+    <meta property="og:title" content="Images and Core Web Vitals: Practical Optimization">
+    <meta property="og:description" content="How images affect LCP, CLS, and INP — and what to do about it (formats, dimensions, lazy-loading, and compression).">
+    <meta property="og:image" content="https://fastimagecompression.com/og-image.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Images and Core Web Vitals: Practical Optimization",
+      "dateModified": "2026-02-04",
+      "datePublished": "2026-02-04",
+      "author": {"@type":"Organization","name":"Fast Image Compression"},
+      "publisher": {"@type":"Organization","name":"Fast Image Compression"},
+      "mainEntityOfPage": "https://fastimagecompression.com/guide-core-web-vitals-images.html"
+    }
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+                <span class="logo-text">FastImageCompression</span>
+            </div>
+            <nav class="nav">
+                <a href="index.html">Home</a>
+                <a href="guides.html">Guides</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="privacy-policy.html">Privacy</a>
+                <a href="terms-of-service.html">Terms</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="page-content">
+                <h1>Images and Core Web Vitals</h1>
+                <p class="last-updated">Last updated: February 4, 2026</p>
+
+                <section class="policy-section">
+                    <h2>Why images matter</h2>
+                    <p>
+                        For many sites, images are the largest resources on the page. That means image choices can make or break
+                        performance scores — and users feel the difference.
+                    </p>
+                    <a class="btn btn-primary" href="index.html#home">Compress images now</a>
+                </section>
+
+                <section class="policy-section">
+                    <h2>LCP (Largest Contentful Paint)</h2>
+                    <p>
+                        LCP is often a hero image. If the hero image is huge or in an inefficient format, your LCP suffers.
+                        Practical fixes:
+                    </p>
+                    <ul>
+                        <li>Resize to the real display size (don’t ship 4000px if you show 1400px)</li>
+                        <li>Prefer WebP for modern browsers when possible</li>
+                        <li>Use a reasonable quality (often 75–85% for photos)</li>
+                        <li>Preload the hero image when it’s the LCP element</li>
+                    </ul>
+                </section>
+
+                <section class="policy-section">
+                    <h2>CLS (Cumulative Layout Shift)</h2>
+                    <p>
+                        CLS happens when the page layout moves as things load. Images cause CLS when the browser doesn’t know
+                        how much space to reserve.
+                    </p>
+                    <ul>
+                        <li>Always set <code>width</code> and <code>height</code> attributes (or reserve space via CSS)</li>
+                        <li>Avoid inserting images above existing content after load</li>
+                        <li>Use consistent aspect ratios for grids</li>
+                    </ul>
+                </section>
+
+                <section class="policy-section">
+                    <h2>INP (Interaction to Next Paint)</h2>
+                    <p>
+                        Images can affect INP indirectly: heavy decoding and scripting can compete with user interactions.
+                        Keep pages responsive by:
+                    </p>
+                    <ul>
+                        <li>Lazy-loading below-the-fold images</li>
+                        <li>Reducing the number of large images on initial load</li>
+                        <li>Avoiding huge animated images where possible</li>
+                    </ul>
+                </section>
+
+                <section class="policy-section">
+                    <h2>A simple checklist</h2>
+                    <ul>
+                        <li>Resize to the real display size</li>
+                        <li>Pick the right format (JPEG/WebP for photos, PNG/WebP for transparency)</li>
+                        <li>Compress with a consistent quality level</li>
+                        <li>Lazy-load non-critical images</li>
+                        <li>Set dimensions to prevent CLS</li>
+                    </ul>
+                    <a class="btn btn-success" href="guides.html">Back to guides</a>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Fast Image Compression</h4>
+                    <p>The fastest online image compression tool. Compress images instantly without compromising quality.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-service.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <p>Need help? Contact us at support@fastimagecompression.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Fast Image Compression. All rights reserved. | fastimagecompression.com</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
