@@ -16,7 +16,8 @@
     "serve": "python -m http.server 8000",
     "serve:node": "npx http-server -p 8000",
     "docker:build": "docker build -f Dockerfile.testing -t image-compression-tests .",
-    "docker:test": "docker run --rm -v $(pwd):/app -w /app image-compression-tests npm run test:e2e:docker"
+    "docker:test": "docker run --rm -v $(pwd):/app -w /app image-compression-tests npm run test:e2e:docker",
+    "sitemap:generate": "node scripts/generate-sitemap.mjs"
   },
   "keywords": [
     "image-compression",
