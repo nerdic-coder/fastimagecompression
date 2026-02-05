@@ -657,6 +657,70 @@ select:focus {
     text-align: center;
 }
 
+/* Share results hook */
+.share-results {
+    margin-top: 1.5rem;
+}
+
+.share-card {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 1.25rem 1.25rem 1.1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(102, 126, 234, 0.25);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+}
+
+.share-card-header h4 {
+    margin: 0 0 0.25rem 0;
+}
+
+.share-subtitle {
+    margin: 0 0 0.75rem 0;
+    color: #666;
+}
+
+.share-metrics {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.9rem;
+    text-align: center;
+}
+
+.share-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.share-note {
+    margin: 0.25rem 0 0;
+    color: #555;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.share-feedback {
+    margin: 0.5rem 0 0;
+    min-height: 1.2em;
+    color: #28a745;
+    font-weight: 600;
+    text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+    .share-card {
+        border-color: rgba(255, 255, 255, 0.12);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.16), rgba(118, 75, 162, 0.16));
+    }
+    .share-subtitle,
+    .share-note {
+        color: rgba(255, 255, 255, 0.8);
+    }
+}
+
 /* Batch Results */
 .batch-summary {
     background: white;
