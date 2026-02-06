@@ -260,7 +260,7 @@ class ImageCompressor {
             shareResults: document.getElementById('shareResults'),
             shareMetrics: document.getElementById('shareMetrics'),
             copyShareTextBtn: document.getElementById('copyShareTextBtn'),
-            tweetShareLink: document.getElementById('tweetShareLink'),
+            copyShareLinkBtn: document.getElementById('copyShareLinkBtn'),
             shareFeedback: document.getElementById('shareFeedback')
         };
         
@@ -395,6 +395,9 @@ class ImageCompressor {
         // Share results hook
         if (copyShareTextBtn) {
             copyShareTextBtn.addEventListener('click', () => this.copyShareText(), options);
+        }
+        if (this.elements.copyShareLinkBtn) {
+            this.elements.copyShareLinkBtn.addEventListener('click', () => this.copyShareLink(), options);
         }
     }
     
@@ -969,9 +972,9 @@ class ImageCompressor {
     }
 
     updateShareHook({ originalBytes, compressedBytes, imageCount }) {
-        const { shareResults, shareMetrics, tweetShareLink, shareFeedback } = this.elements;
+        const { shareResults, shareMetrics, copyShareLinkBtn, shareFeedback } = this.elements;
 
-        if (!shareResults || !shareMetrics || !tweetShareLink) {
+        if (!shareResults || !shareMetrics || !copyShareLinkBtn) {
             return;
         }
 
@@ -994,8 +997,8 @@ class ImageCompressor {
         // Store share text for copy handler
         this.lastShareText = shareText;
 
-        const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
-        tweetShareLink.href = tweetUrl;
+        // Store share link for copy handler
+        this.lastShareLink = 'https://fastimagecompression.com/';
 
         if (shareFeedback) {
             shareFeedback.textContent = '';
@@ -1013,24 +1016,37 @@ class ImageCompressor {
             return;
         }
 
+        await this.copyToClipboard(text);
+        if (shareFeedback) shareFeedback.textContent = 'Copied!';
+    }
+
+    async copyShareLink() {
+        const { shareFeedback } = this.elements;
+        const link = this.lastShareLink || 'https://fastimagecompression.com/';
+
+        await this.copyToClipboard(link);
+        if (shareFeedback) shareFeedback.textContent = 'Link copied!';
+    }
+
+    async copyToClipboard(text) {
         try {
             await navigator.clipboard.writeText(text);
-            if (shareFeedback) shareFeedback.textContent = 'Copied!';
-        } catch (err) {
-            // Fallback for older browsers
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.setAttribute('readonly', '');
-            textarea.style.position = 'absolute';
-            textarea.style.left = '-9999px';
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                if (shareFeedback) shareFeedback.textContent = 'Copied!';
-            } catch {
-                if (shareFeedback) shareFeedback.textContent = 'Copy failed. Please copy manually.';
-            }
+            return;
+        } catch {
+            // ignore and fall back
+        }
+
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+        } finally {
             document.body.removeChild(textarea);
         }
     }
