@@ -254,7 +254,14 @@ class ImageCompressor {
             totalImages: document.getElementById('totalImages'),
             totalSizeReduction: document.getElementById('totalSizeReduction'),
             averageCompression: document.getElementById('averageCompression'),
-            batchImageGrid: document.getElementById('batchImageGrid')
+            batchImageGrid: document.getElementById('batchImageGrid'),
+
+            // Share hook elements
+            shareResults: document.getElementById('shareResults'),
+            shareMetrics: document.getElementById('shareMetrics'),
+            copyShareTextBtn: document.getElementById('copyShareTextBtn'),
+            copyShareLinkBtn: document.getElementById('copyShareLinkBtn'),
+            shareFeedback: document.getElementById('shareFeedback')
         };
         
         // Debug: Check if critical elements are found
@@ -278,7 +285,16 @@ class ImageCompressor {
     }
 
     bindEvents() {
-        const { uploadArea, fileInput, qualitySlider, compressBtn, downloadBtn, downloadAllBtn, mobileUploadButton } = this.elements;
+        const {
+            uploadArea,
+            fileInput,
+            qualitySlider,
+            compressBtn,
+            downloadBtn,
+            downloadAllBtn,
+            mobileUploadButton,
+            copyShareTextBtn
+        } = this.elements;
         
         // Use passive listeners where possible for better performance
         const options = { passive: true };
@@ -375,6 +391,14 @@ class ImageCompressor {
         compressBtn.addEventListener('click', () => this.compressImage(), options);
         downloadBtn.addEventListener('click', () => this.downloadCompressedImage(), options);
         downloadAllBtn.addEventListener('click', () => this.downloadAllCompressedImages(), options);
+
+        // Share results hook
+        if (copyShareTextBtn) {
+            copyShareTextBtn.addEventListener('click', () => this.copyShareText(), options);
+        }
+        if (this.elements.copyShareLinkBtn) {
+            this.elements.copyShareLinkBtn.addEventListener('click', () => this.copyShareLink(), options);
+        }
     }
     
     // Throttle function to reduce event handler frequency
@@ -947,6 +971,86 @@ class ImageCompressor {
         });
     }
 
+    updateShareHook({ originalBytes, compressedBytes, imageCount }) {
+        const { shareResults, shareMetrics, copyShareLinkBtn, shareFeedback } = this.elements;
+
+        if (!shareResults || !shareMetrics || !copyShareLinkBtn) {
+            return;
+        }
+
+        const savingsBytes = originalBytes - compressedBytes;
+        const savingsPct = originalBytes > 0 ? (savingsBytes / originalBytes) * 100 : 0;
+
+        // Only show when there is a positive reduction.
+        if (!(savingsBytes > 0)) {
+            shareResults.style.display = 'none';
+            return;
+        }
+
+        const savingsText = `${this.formatFileSize(savingsBytes)} (${savingsPct.toFixed(1)}%)`;
+        const countText = imageCount === 1 ? '1 image' : `${imageCount} images`;
+
+        shareMetrics.textContent = `Saved ${savingsText} across ${countText} (processed locally in your browser).`;
+
+        const shareText = `I compressed ${countText} and saved ${savingsText} using FastImageCompression (runs locally in your browser - no uploads): https://fastimagecompression.com/`;
+
+        // Store share text for copy handler
+        this.lastShareText = shareText;
+
+        // Store share link for copy handler
+        this.lastShareLink = 'https://fastimagecompression.com/';
+
+        if (shareFeedback) {
+            shareFeedback.textContent = '';
+        }
+
+        shareResults.style.display = 'block';
+    }
+
+    async copyShareText() {
+        const { shareFeedback } = this.elements;
+        const text = this.lastShareText;
+
+        if (!text) {
+            if (shareFeedback) shareFeedback.textContent = 'Nothing to copy yet. Compress an image first.';
+            return;
+        }
+
+        await this.copyToClipboard(text);
+        if (shareFeedback) shareFeedback.textContent = 'Copied!';
+    }
+
+    async copyShareLink() {
+        const { shareFeedback } = this.elements;
+        const link = this.lastShareLink || 'https://fastimagecompression.com/';
+
+        await this.copyToClipboard(link);
+        if (shareFeedback) shareFeedback.textContent = 'Link copied!';
+    }
+
+    async copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return;
+        } catch {
+            // ignore and fall back
+        }
+
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+
     displaySingleResults(compressedDataUrl) {
         const { 
             compressedImageEl, compressedDimensions, compressedSize, 
@@ -1012,6 +1116,13 @@ class ImageCompressor {
         
         // Store compressed data for download
         this.compressedDataUrl = compressedDataUrl;
+
+        // Share hook (single image)
+        this.updateShareHook({
+            originalBytes: originalSize,
+            compressedBytes: compressedSizeBytes,
+            imageCount: 1
+        });
         
         // Show results section with optimized animation
         resultsSection.style.display = 'block';
@@ -1045,6 +1156,13 @@ class ImageCompressor {
         totalImages.textContent = this.compressedImages.length;
         totalSizeReduction.textContent = `${totalReduction.toFixed(1)}% (${this.formatFileSize(totalOriginalSize - totalCompressedSize)})`;
         averageCompression.textContent = `${averageReduction.toFixed(1)}%`;
+
+        // Share hook (batch)
+        this.updateShareHook({
+            originalBytes: totalOriginalSize,
+            compressedBytes: totalCompressedSize,
+            imageCount: this.compressedImages.length
+        });
         
         // Clear and populate batch image grid
         batchImageGrid.innerHTML = '';
