@@ -715,9 +715,16 @@ select:focus {
         border-color: rgba(255, 255, 255, 0.12);
         background: linear-gradient(135deg, rgba(102, 126, 234, 0.16), rgba(118, 75, 162, 0.16));
     }
+
+    /* Keep text readable even when the rest of the page is in dark mode */
+    .share-card-header h4,
+    .share-metrics {
+        color: rgba(255, 255, 255, 0.92);
+    }
+
     .share-subtitle,
     .share-note {
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.82);
     }
 }
 
