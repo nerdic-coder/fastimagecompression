@@ -1563,14 +1563,25 @@ h3 {
 }
 
 @media (prefers-color-scheme: dark) {
+    /*
+      Some browsers apply dark-mode form controls / colors even when the page background stays light.
+      In that case, white text on a white card becomes unreadable. So in dark mode we explicitly
+      darken the card background.
+    */
     .wp-workflow-card {
-        background: rgba(255,255,255,0.06);
+        background: linear-gradient(135deg, rgba(20, 20, 30, 0.78), rgba(45, 35, 70, 0.78));
         border-color: rgba(255,255,255,0.12);
         box-shadow: none;
     }
+
+    .wp-workflow-header h3 {
+        color: rgba(255,255,255,0.92);
+    }
+
     .wp-workflow-header p {
         color: rgba(255,255,255,0.82);
     }
+
     .wp-workflow-steps {
         color: rgba(255,255,255,0.9);
     }
