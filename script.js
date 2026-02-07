@@ -32,6 +32,11 @@ class ImageCompressor {
         this.bindEvents();
         this.preCreateCanvas();
         this.detectSafariAndApplyFixes();
+
+        // Analytics
+        this.analytics = {
+            enabled: typeof window !== 'undefined' && typeof window.gtag === 'function',
+        };
         
         // Initialize FAQ after a short delay to ensure DOM is ready
         setTimeout(() => {
@@ -388,9 +393,31 @@ class ImageCompressor {
         
         // Control events with throttling
         qualitySlider.addEventListener('input', this.throttle((e) => this.updateQualityValue(e), 16), options);
-        compressBtn.addEventListener('click', () => this.compressImage(), options);
-        downloadBtn.addEventListener('click', () => this.downloadCompressedImage(), options);
-        downloadAllBtn.addEventListener('click', () => this.downloadAllCompressedImages(), options);
+
+        compressBtn.addEventListener('click', () => {
+            this.trackEvent('compress_click', {
+                output_format: this.elements.formatSelect?.value,
+                quality: Number(this.elements.qualitySlider?.value),
+                image_count: this.originalFiles?.length || (this.originalFile ? 1 : 0),
+            });
+            this.compressImage();
+        }, options);
+
+        downloadBtn.addEventListener('click', () => {
+            this.trackEvent('download_click', {
+                output_format: this.elements.formatSelect?.value,
+                image_count: 1,
+            });
+            this.downloadCompressedImage();
+        }, options);
+
+        downloadAllBtn.addEventListener('click', () => {
+            this.trackEvent('download_all_click', {
+                output_format: this.elements.formatSelect?.value,
+                image_count: this.compressedImages?.length || 0,
+            });
+            this.downloadAllCompressedImages();
+        }, options);
 
         // Share results hook
         if (copyShareTextBtn) {
@@ -401,6 +428,20 @@ class ImageCompressor {
         }
     }
     
+    trackEvent(name, params = {}) {
+        try {
+            if (!this.analytics?.enabled) return;
+            // GA4 event name should be lowercase/underscore
+            window.gtag('event', name, {
+                ...params,
+                // Helpful context
+                page_path: window.location?.pathname || undefined,
+            });
+        } catch {
+            // no-op
+        }
+    }
+
     // Throttle function to reduce event handler frequency
     throttle(func, limit) {
         let inThrottle;
@@ -1016,6 +1057,10 @@ class ImageCompressor {
             return;
         }
 
+        this.trackEvent('copy_results_text', {
+            output_format: this.elements.formatSelect?.value,
+        });
+
         await this.copyToClipboard(text);
         if (shareFeedback) shareFeedback.textContent = 'Copied!';
     }
@@ -1023,6 +1068,10 @@ class ImageCompressor {
     async copyShareLink() {
         const { shareFeedback } = this.elements;
         const link = this.lastShareLink || 'https://fastimagecompression.com/';
+
+        this.trackEvent('copy_link', {
+            output_format: this.elements.formatSelect?.value,
+        });
 
         await this.copyToClipboard(link);
         if (shareFeedback) shareFeedback.textContent = 'Link copied!';
