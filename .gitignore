@@ -58,3 +58,8 @@ pids
 # Temporary files
 *.tmp
 *.temp
+
+# local assets
+promo-assets/
+promo-assets.zip
+styles.wp-workflow.css.snippet
