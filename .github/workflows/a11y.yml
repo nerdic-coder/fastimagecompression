@@ -1,0 +1,36 @@
+name: Accessibility checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pa11y:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Start local server
+        run: |
+          python3 -m http.server 4173 >/tmp/http.log 2>&1 &
+          echo $! > /tmp/http.pid
+
+      - name: Run pa11y CI
+        run: npm run test:a11y
+
+      - name: Stop local server
+        if: always()
+        run: |
+          kill $(cat /tmp/http.pid) || true

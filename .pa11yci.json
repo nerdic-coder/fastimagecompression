@@ -1,0 +1,16 @@
+{
+  "defaults": {
+    "standard": "WCAG2AA",
+    "timeout": 30000,
+    "wait": 1000,
+    "hideElements": ".faq-answer",
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    }
+  },
+  "urls": [
+    "http://127.0.0.1:4173/index.html",
+    "http://127.0.0.1:4173/guides.html",
+    "http://127.0.0.1:4173/guide-jpeg-vs-png-webp.html"
+  ]
+}
