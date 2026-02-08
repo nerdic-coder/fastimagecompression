@@ -458,6 +458,39 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.preset-btn {
+    border: 1px solid #ccd4ff;
+    background: #f4f6ff;
+    color: #3b478d;
+    border-radius: 999px;
+    padding: 0.38rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.preset-btn:hover {
+    background: #e8ecff;
+}
+
+.preset-btn.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+}
+
+.preset-hint {
+    display: block;
+    margin-top: 0.5rem;
+    color: #666;
+}
+
 .slider {
     width: 100%;
     height: 8px;
