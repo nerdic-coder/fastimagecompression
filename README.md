@@ -54,6 +54,10 @@ A lightning-fast, modern, responsive web application for compressing images onli
 - Progressive loading and smooth animations
 - Optimized for mobile devices
 
+## Analytics
+
+- GA4 hardening checklist and KPI template: `docs/analytics.md`
+
 ## Privacy & Security
 
 - Images never leave your device
