@@ -22,6 +22,9 @@
 /script.js
   Cache-Control: public, max-age=86400
 
+/theme.js
+  Cache-Control: public, max-age=86400
+
 /styles.css
   Cache-Control: public, max-age=86400
 
