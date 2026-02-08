@@ -1457,16 +1457,13 @@ class ImageCompressor {
             return;
         }
         
-        faqQuestions.forEach((question, index) => {
-            // Store the question element
+        faqQuestions.forEach((question) => {
             const q = question;
-            const i = index;
-            
-            // Simple toggle function
+
             function toggle() {
                 const answer = q.nextElementSibling;
                 const isExpanded = q.getAttribute('aria-expanded') === 'true';
-                
+
                 // Close all other FAQ items
                 faqQuestions.forEach(otherQuestion => {
                     if (otherQuestion !== q) {
@@ -1474,7 +1471,7 @@ class ImageCompressor {
                         otherQuestion.nextElementSibling.classList.remove('active');
                     }
                 });
-                
+
                 // Toggle current FAQ item
                 if (isExpanded) {
                     q.setAttribute('aria-expanded', 'false');
@@ -1484,32 +1481,23 @@ class ImageCompressor {
                     answer.classList.add('active');
                 }
             }
-            
-            // Direct onclick assignment (most compatible)
-            q.onclick = function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-                toggle();
-                return false;
-            };
-            
-            // Backup with addEventListener
+
+            // Single click handler (avoid double toggle from mixed handlers)
             q.addEventListener('click', function(event) {
                 event.preventDefault();
-                event.stopPropagation();
                 toggle();
-            }, true);
-            
+            });
+
             // Add keyboard support
-            question.addEventListener('keydown', function(e) {
+            q.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13 || e.keyCode === 32) {
                     e.preventDefault();
-                    question.click();
+                    toggle();
                 }
             });
-            
+
             // Ensure the button is focusable
-            question.setAttribute('tabindex', '0');
+            q.setAttribute('tabindex', '0');
         });
     }
 }
