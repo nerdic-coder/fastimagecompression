@@ -1566,7 +1566,7 @@ h3 {
     /*
       Some browsers apply dark-mode form controls / colors even when the page background stays light.
       In that case, white text on a white card becomes unreadable. So in dark mode we explicitly
-      darken the card background.
+      darken key cards' backgrounds.
     */
     .wp-workflow-card {
         background: linear-gradient(135deg, rgba(20, 20, 30, 0.78), rgba(45, 35, 70, 0.78));
@@ -1584,5 +1584,127 @@ h3 {
 
     .wp-workflow-steps {
         color: rgba(255,255,255,0.9);
+    }
+}
+
+/* Credibility sections */
+.how-it-works,
+.compare,
+.changelog {
+    margin: 2rem auto;
+}
+
+.how-it-works-card,
+.compare-card,
+.changelog-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+    border: 1px solid rgba(102, 126, 234, 0.18);
+}
+
+.how-it-works-card h3,
+.compare-card h3,
+.changelog-card h3 {
+    margin: 0 0 0.75rem 0;
+}
+
+.how-it-works-grid,
+.compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.how-it-works-step,
+.compare-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(0,0,0,0.04);
+}
+
+.how-it-works-step h4,
+.compare-item h4 {
+    margin: 0 0 0.5rem 0;
+}
+
+.how-it-works-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Make secondary links readable on dark cards (e.g., About link) */
+.how-it-works-actions .btn:not(.btn-primary):not(.btn-success) {
+    color: #333;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.how-it-works-actions .btn:not(.btn-primary):not(.btn-success):hover {
+    background: rgba(0, 0, 0, 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+    .how-it-works-actions .btn:not(.btn-primary):not(.btn-success) {
+        color: rgba(255,255,255,0.92);
+        border: 1px solid rgba(255,255,255,0.18);
+        background: rgba(255,255,255,0.06);
+    }
+
+    .how-it-works-actions .btn:not(.btn-primary):not(.btn-success):hover {
+        background: rgba(255,255,255,0.10);
+    }
+}
+
+.compare-intro {
+    margin: 0;
+    color: #555;
+}
+
+.compare-item ul {
+    margin: 0.5rem 0 0 1.25rem;
+    color: #333;
+}
+
+.changelog-list {
+    margin: 0.25rem 0 0 1.25rem;
+    color: #333;
+    line-height: 1.6;
+}
+
+@media (prefers-color-scheme: dark) {
+    .how-it-works-card,
+    .compare-card,
+    .changelog-card {
+        background: linear-gradient(135deg, rgba(20, 20, 30, 0.78), rgba(45, 35, 70, 0.78));
+        border-color: rgba(255,255,255,0.12);
+        box-shadow: none;
+    }
+
+    .how-it-works-step,
+    .compare-item {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.10);
+    }
+
+    .compare-intro,
+    .compare-item ul,
+    .changelog-list,
+    .how-it-works-card p,
+    .how-it-works-step p {
+        color: rgba(255,255,255,0.85);
+    }
+
+    .how-it-works-card h3,
+    .compare-card h3,
+    .changelog-card h3,
+    .how-it-works-step h4,
+    .compare-item h4 {
+        color: rgba(255,255,255,0.92);
     }
 }
