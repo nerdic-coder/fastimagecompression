@@ -1431,14 +1431,14 @@ h3 {
 }
 
 .policy-section a {
-    color: #667eea;
+    color: #4f64d4;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .policy-section a:hover {
-    color: #764ba2;
+    color: #5f3d8a;
     text-decoration: underline;
 }
 
