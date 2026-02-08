@@ -1544,6 +1544,14 @@ h3 {
     color: #fff;
 }
 
+.recommended-tools .btn.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.recommended-tools .btn.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
 /* WordPress workflow card */
 .wp-workflow {
     margin: 2rem auto 2.25rem;
@@ -1780,6 +1788,7 @@ html.theme-dark h2,
 html.theme-dark h3,
 html.theme-dark h4,
 html.theme-dark h5,
+html.theme-dark .hero p,
 html.theme-dark .summary-label,
 html.theme-dark .summary-value,
 html.theme-dark .stat-label,
@@ -1792,8 +1801,11 @@ html.theme-dark .page-content p,
 html.theme-dark .page-content li,
 html.theme-dark .format-card p,
 html.theme-dark .format-card h4,
+html.theme-dark .guide-card p,
+html.theme-dark .guide-card h4,
 html.theme-dark .feature-card p,
 html.theme-dark .feature-card h4,
+html.theme-dark .faq-answer p,
 html.theme-dark .recommended-tools .learn-more-text,
 html.theme-dark .guides-intro,
 html.theme-dark .compare-intro,
@@ -1817,7 +1829,11 @@ html.theme-dark .theme-toggle:hover {
 
 html.theme-dark .upload-area,
 html.theme-dark .progress-section,
+html.theme-dark .control-group,
 html.theme-dark .summary-stat,
+html.theme-dark .result-card,
+html.theme-dark .image-container,
+html.theme-dark .compression-stats,
 html.theme-dark .how-it-works-step,
 html.theme-dark .compare-item {
     background: rgba(255, 255, 255, 0.04) !important;
