@@ -236,6 +236,8 @@ class ImageCompressor {
             qualitySlider: document.getElementById('qualitySlider'),
             qualityValue: document.getElementById('qualityValue'),
             formatSelect: document.getElementById('formatSelect'),
+            presetButtons: document.querySelectorAll('.preset-btn'),
+            presetHint: document.getElementById('presetHint'),
             compressBtn: document.getElementById('compressBtn'),
             compressBtnText: document.getElementById('compressBtnText'),
             downloadAllBtn: document.getElementById('downloadAllBtn'),
@@ -300,7 +302,8 @@ class ImageCompressor {
             downloadBtn,
             downloadAllBtn,
             mobileUploadButton,
-            copyShareTextBtn
+            copyShareTextBtn,
+            presetButtons
         } = this.elements;
         
         // Use passive listeners where possible for better performance
@@ -396,6 +399,12 @@ class ImageCompressor {
         // Control events with throttling
         qualitySlider.addEventListener('input', this.throttle((e) => this.updateQualityValue(e), 16), options);
 
+        if (presetButtons?.length) {
+            presetButtons.forEach((button) => {
+                button.addEventListener('click', () => this.applyPreset(button.dataset.preset));
+            });
+        }
+
         compressBtn.addEventListener('click', () => {
             this.trackEvent('compress_click', {
                 output_format: this.elements.formatSelect?.value,
@@ -442,6 +451,36 @@ class ImageCompressor {
         } catch {
             // no-op
         }
+    }
+
+    applyPreset(presetName) {
+        const presets = {
+            web: { quality: 78, format: 'webp', hint: 'Web preset: balanced quality and size for most websites.' },
+            wordpress: { quality: 80, format: 'webp', hint: 'WordPress preset: strong balance for page speed and visual quality.' },
+            social: { quality: 72, format: 'jpeg', hint: 'Social preset: tuned for broad compatibility and lighter files.' },
+            email: { quality: 62, format: 'jpeg', hint: 'Email preset: smaller files for easier attachment and delivery.' },
+        };
+
+        const preset = presets[presetName];
+        if (!preset || !this.elements?.qualitySlider || !this.elements?.formatSelect) return;
+
+        this.elements.qualitySlider.value = String(preset.quality);
+        this.elements.formatSelect.value = preset.format;
+        this.elements.qualityValue.textContent = String(preset.quality);
+
+        this.elements.presetButtons?.forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.preset === presetName);
+        });
+
+        if (this.elements.presetHint) {
+            this.elements.presetHint.textContent = preset.hint;
+        }
+
+        this.trackEvent('preset_select', {
+            preset: presetName,
+            output_format: preset.format,
+            quality: preset.quality,
+        });
     }
 
     estimateTransferSeconds(bytes, mbps) {
