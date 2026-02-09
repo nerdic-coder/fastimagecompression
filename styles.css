@@ -1848,6 +1848,21 @@ html.theme-dark textarea {
     color: #f0f2fa;
 }
 
+html.theme-dark .control-group label,
+html.theme-dark .slider-labels,
+html.theme-dark .progress-text,
+html.theme-dark .progress-section h4 {
+    color: #dfe5ff;
+}
+
+html.theme-dark .slider {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+html.theme-dark .image-item {
+    background: rgba(255, 255, 255, 0.9);
+}
+
 html.theme-dark .policy-section a,
 html.theme-dark .page-content a {
     color: #9ab0ff;
