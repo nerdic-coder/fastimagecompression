@@ -681,7 +681,7 @@ class ImageCompressor {
         stats.innerHTML = `
             <div>Original: ${this.formatFileSize(imgData.originalSize)}</div>
             <div>Compressed: ${this.formatFileSize(imgData.compressedSize)}</div>
-            <div>Reduction: ${imgData.reduction.toFixed(1)}%</div>
+            <div class="batch-image-reduction">Reduction: ${imgData.reduction.toFixed(1)}%</div>
         `;
         
         const downloadBtn = document.createElement('button');

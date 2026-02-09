@@ -863,6 +863,11 @@ html.theme-dark .load-time-estimate {
     margin-bottom: 0.75rem;
 }
 
+.batch-image-reduction {
+    font-weight: 700;
+    color: #1f8a3a;
+}
+
 .batch-image-download {
     width: 100%;
     padding: 0.5rem;
@@ -1944,4 +1949,12 @@ html.theme-dark .recommended-tools .btn.btn-primary {
 html.theme-dark .recommended-tools .btn.btn-success {
     background: linear-gradient(135deg, #28a745, #20c997);
     color: #fff !important;
+}
+
+html.theme-dark .batch-image-stats {
+    color: #dfe5ff;
+}
+
+html.theme-dark .batch-image-reduction {
+    color: #7ee787;
 }
