@@ -257,8 +257,10 @@ class ImageCompressor {
             compressedDimensions: document.getElementById('compressedDimensions'),
             sizeReduction: document.getElementById('sizeReduction'),
             compressionRatio: document.getElementById('compressionRatio'),
+            singleLoadTimeEstimate: document.getElementById('singleLoadTimeEstimate'),
             downloadBtn: document.getElementById('downloadBtn'),
             totalImages: document.getElementById('totalImages'),
+            batchLoadTimeEstimate: document.getElementById('batchLoadTimeEstimate'),
             totalSizeReduction: document.getElementById('totalSizeReduction'),
             averageCompression: document.getElementById('averageCompression'),
             batchImageGrid: document.getElementById('batchImageGrid'),
@@ -451,6 +453,7 @@ class ImageCompressor {
         }
     }
 
+<<<<<<< issue-32-compression-presets
     applyPreset(presetName) {
         const presets = {
             web: { quality: 78, format: 'webp', hint: 'Web preset: balanced quality and size for most websites.' },
@@ -479,6 +482,35 @@ class ImageCompressor {
             output_format: preset.format,
             quality: preset.quality,
         });
+=======
+    estimateTransferSeconds(bytes, mbps) {
+        if (!bytes || !mbps || mbps <= 0) return 0;
+        const bits = bytes * 8;
+        const bitsPerSecond = mbps * 1000 * 1000;
+        return bits / bitsPerSecond;
+    }
+
+    formatSeconds(seconds) {
+        if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
+        return `${seconds.toFixed(2)}s`;
+    }
+
+    buildLoadTimeEstimate(originalBytes, compressedBytes) {
+        const profiles = [
+            { label: 'Fast 3G', mbps: 1.6 },
+            { label: 'Slow 4G', mbps: 9 },
+            { label: 'Wi‑Fi', mbps: 30 },
+        ];
+
+        const estimates = profiles.map((p) => {
+            const before = this.estimateTransferSeconds(originalBytes, p.mbps);
+            const after = this.estimateTransferSeconds(compressedBytes, p.mbps);
+            const saved = Math.max(0, before - after);
+            return `${p.label}: ~${this.formatSeconds(saved)} saved`;
+        });
+
+        return `Estimated transfer-time savings (${estimates.join(' · ')})`;
+>>>>>>> main
     }
 
     // Throttle function to reduce event handler frequency
@@ -1142,7 +1174,7 @@ class ImageCompressor {
     displaySingleResults(compressedDataUrl) {
         const { 
             compressedImageEl, compressedDimensions, compressedSize, 
-            sizeReduction, compressionRatio, resultsSection, singleResults, batchResults, progressSection
+            sizeReduction, compressionRatio, singleLoadTimeEstimate, resultsSection, singleResults, batchResults, progressSection
         } = this.elements;
         
         // Hide progress section when showing results
@@ -1202,6 +1234,10 @@ class ImageCompressor {
             compressionRatio.style.color = '#28a745';
         }
         
+        if (singleLoadTimeEstimate) {
+            singleLoadTimeEstimate.textContent = this.buildLoadTimeEstimate(originalSize, compressedSizeBytes);
+        }
+
         // Store compressed data for download
         this.compressedDataUrl = compressedDataUrl;
 
@@ -1224,7 +1260,7 @@ class ImageCompressor {
     displayBatchResults() {
         const { 
             resultsSection, singleResults, batchResults, downloadAllBtn, progressSection,
-            totalImages, totalSizeReduction, averageCompression, batchImageGrid
+            totalImages, totalSizeReduction, averageCompression, batchLoadTimeEstimate, batchImageGrid
         } = this.elements;
         
         // Hide progress section when showing results
@@ -1244,6 +1280,9 @@ class ImageCompressor {
         totalImages.textContent = this.compressedImages.length;
         totalSizeReduction.textContent = `${totalReduction.toFixed(1)}% (${this.formatFileSize(totalOriginalSize - totalCompressedSize)})`;
         averageCompression.textContent = `${averageReduction.toFixed(1)}%`;
+        if (batchLoadTimeEstimate) {
+            batchLoadTimeEstimate.textContent = this.buildLoadTimeEstimate(totalOriginalSize, totalCompressedSize);
+        }
 
         // Share hook (batch)
         this.updateShareHook({

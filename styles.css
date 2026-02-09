@@ -666,7 +666,18 @@ select:focus {
     display: flex;
     justify-content: center;
     gap: 3rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
+}
+
+.load-time-estimate {
+    margin: 0 0 1.25rem;
+    font-weight: 600;
+    color: #3d4a95;
+    text-align: center;
+}
+
+html.theme-dark .load-time-estimate {
+    color: #cfd6ff;
 }
 
 .stat {
