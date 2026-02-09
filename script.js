@@ -453,7 +453,6 @@ class ImageCompressor {
         }
     }
 
-<<<<<<< issue-32-compression-presets
     applyPreset(presetName) {
         const presets = {
             web: { quality: 78, format: 'webp', hint: 'Web preset: balanced quality and size for most websites.' },
@@ -482,7 +481,8 @@ class ImageCompressor {
             output_format: preset.format,
             quality: preset.quality,
         });
-=======
+    }
+
     estimateTransferSeconds(bytes, mbps) {
         if (!bytes || !mbps || mbps <= 0) return 0;
         const bits = bytes * 8;
@@ -510,7 +510,6 @@ class ImageCompressor {
         });
 
         return `Estimated transfer-time savings (${estimates.join(' · ')})`;
->>>>>>> main
     }
 
     // Throttle function to reduce event handler frequency
