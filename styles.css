@@ -1568,6 +1568,34 @@ h3 {
     height: auto;
 }
 
+.recommended-tools .learn-more-text {
+    color: #555;
+}
+
+.recommended-tools .btn {
+    background: #eef1ff;
+    color: #38407a;
+    border: 1px solid #d8ddff;
+}
+
+.recommended-tools .btn:hover {
+    background: #e2e8ff;
+}
+
+.recommended-tools .btn.btn-primary,
+.recommended-tools .btn.btn-success {
+    border: none;
+    color: #fff;
+}
+
+.recommended-tools .btn.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.recommended-tools .btn.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
 /* WordPress workflow card */
 .wp-workflow {
     margin: 2rem auto 2.25rem;
@@ -1751,4 +1779,169 @@ h3 {
     .compare-item h4 {
         color: rgba(255,255,255,0.92);
     }
+}
+
+/* Global theming */
+.theme-toggle {
+    border: 1px solid rgba(102, 126, 234, 0.35);
+    background: rgba(102, 126, 234, 0.12);
+    color: #4c58a8;
+    border-radius: 999px;
+    padding: 0.38rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.theme-toggle:hover {
+    background: rgba(102, 126, 234, 0.2);
+}
+
+html.theme-dark body {
+    color: #e8e9ef;
+    background: linear-gradient(135deg, #1c1f35 0%, #2b1f3d 100%);
+}
+
+html.theme-dark .header,
+html.theme-dark .main,
+html.theme-dark .footer,
+html.theme-dark .results-section,
+html.theme-dark .batch-summary,
+html.theme-dark .batch-image-card,
+html.theme-dark .format-card,
+html.theme-dark .feature-card,
+html.theme-dark .guide-card,
+html.theme-dark .policy-section,
+html.theme-dark .recommended-tools .tool-card,
+html.theme-dark .how-it-works-card,
+html.theme-dark .compare-card,
+html.theme-dark .changelog-card,
+html.theme-dark .wp-workflow-card,
+html.theme-dark .share-card,
+html.theme-dark .faq-item,
+html.theme-dark .faq-question,
+html.theme-dark .faq-answer {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #e8e9ef;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.theme-dark .logo .logo-text,
+html.theme-dark h1,
+html.theme-dark h2,
+html.theme-dark h3,
+html.theme-dark h4,
+html.theme-dark h5,
+html.theme-dark .hero p,
+html.theme-dark .summary-label,
+html.theme-dark .summary-value,
+html.theme-dark .stat-label,
+html.theme-dark .stat-value,
+html.theme-dark .file-info,
+html.theme-dark .footer p,
+html.theme-dark .footer a,
+html.theme-dark .nav a,
+html.theme-dark .page-content p,
+html.theme-dark .page-content li,
+html.theme-dark .format-card p,
+html.theme-dark .format-card h4,
+html.theme-dark .guide-card p,
+html.theme-dark .guide-card h4,
+html.theme-dark .feature-card p,
+html.theme-dark .feature-card h4,
+html.theme-dark .faq-answer p,
+html.theme-dark .recommended-tools .learn-more-text,
+html.theme-dark .guides-intro,
+html.theme-dark .compare-intro,
+html.theme-dark .changelog-list,
+html.theme-dark .wp-workflow-header p,
+html.theme-dark .wp-workflow-steps,
+html.theme-dark .share-subtitle,
+html.theme-dark .share-note {
+    color: #e8e9ef !important;
+}
+
+html.theme-dark .theme-toggle {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f1f7;
+}
+
+html.theme-dark .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+html.theme-dark .upload-area,
+html.theme-dark .controls,
+html.theme-dark .progress-section,
+html.theme-dark .summary-stat,
+html.theme-dark .result-card,
+html.theme-dark .image-container,
+html.theme-dark .compression-stats,
+html.theme-dark .how-it-works-step,
+html.theme-dark .compare-item {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+html.theme-dark select,
+html.theme-dark input,
+html.theme-dark textarea {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #f0f2fa;
+}
+
+html.theme-dark .control-group label,
+html.theme-dark .slider-labels,
+html.theme-dark .progress-text,
+html.theme-dark .progress-section h4 {
+    color: #dfe5ff;
+}
+
+html.theme-dark .slider {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+html.theme-dark .image-item {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+html.theme-dark .policy-section a,
+html.theme-dark .page-content a {
+    color: #9ab0ff;
+}
+
+html.theme-dark .policy-section a:hover,
+html.theme-dark .page-content a:hover {
+    color: #b9c8ff;
+}
+
+html.theme-dark .policy-section strong,
+html.theme-dark .page-content strong {
+    color: #ffffff;
+}
+
+html.theme-dark .btn.btn-primary,
+html.theme-dark .btn.btn-success {
+    color: #ffffff !important;
+}
+
+html.theme-dark .recommended-tools .btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #f2f4ff;
+}
+
+html.theme-dark .recommended-tools .btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+html.theme-dark .recommended-tools .btn.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff !important;
+}
+
+html.theme-dark .recommended-tools .btn.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: #fff !important;
 }
