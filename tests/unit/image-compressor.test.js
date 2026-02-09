@@ -93,4 +93,53 @@ describe('ImageCompressor', () => {
     expect(compressor.isValidImageFile(invalidFile)).toBe(false);
     expect(compressor.isValidImageFile(largeFile)).toBe(false);
   });
+
+  test('should generate single-image optimization report in markdown', () => {
+    const compressor = new ImageCompressor();
+    compressor.originalFile = { name: 'test-image.jpg', size: 5000 };
+    compressor.compressedDataUrl = 'data:image/jpeg;base64,' + 'a'.repeat(2000);
+    compressor.elements = { formatSelect: { value: 'webp' }, qualitySlider: { value: '75' } };
+
+    const report = compressor.generateOptimizationReport('md');
+
+    expect(report).toContain('# Optimization Report');
+    expect(report).toContain('**Selected format:** WEBP');
+    expect(report).toContain('**Quality:** 75%');
+    expect(report).toContain('Estimated transfer-time savings');
+  });
+
+  test('should generate batch optimization report with per-image entries', () => {
+    const compressor = new ImageCompressor();
+    compressor.compressedImages = [
+      {
+        originalFile: { name: 'a.jpg' },
+        originalSize: 4000,
+        compressedSize: 2000,
+        reduction: 50,
+      },
+      {
+        originalFile: { name: 'b.jpg' },
+        originalSize: 2000,
+        compressedSize: 1000,
+        reduction: 50,
+      },
+    ];
+    compressor.elements = { formatSelect: { value: 'jpeg' }, qualitySlider: { value: '80' } };
+
+    const report = compressor.generateOptimizationReport('txt');
+
+    expect(report).toContain('Mode: Batch (2 images)');
+    expect(report).toContain('Per-image results');
+    expect(report).toContain('1. a.jpg');
+    expect(report).toContain('2. b.jpg');
+  });
+
+  test('should generate clear report filename with mode and timestamp', () => {
+    const compressor = new ImageCompressor();
+    compressor.compressedImages = [{}, {}];
+
+    const fileName = compressor.generateReportFileName('txt');
+
+    expect(fileName).toMatch(/^optimization-report_batch_\d{8}_\d{6}\.txt$/);
+  });
 });

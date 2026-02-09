@@ -1945,3 +1945,27 @@ html.theme-dark .recommended-tools .btn.btn-success {
     background: linear-gradient(135deg, #28a745, #20c997);
     color: #fff !important;
 }
+
+
+.export-report-section {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid rgba(46, 125, 50, 0.15);
+    border-radius: 12px;
+    background: rgba(46, 125, 50, 0.04);
+}
+
+.export-report-section h4 {
+    margin-bottom: 0.25rem;
+}
+
+.export-report-section p {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.export-report-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}

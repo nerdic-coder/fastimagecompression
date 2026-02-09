@@ -61,7 +61,9 @@ class ImageCompressor {
             totalImages: document.getElementById('totalImages'),
             totalSizeReduction: document.getElementById('totalSizeReduction'),
             averageCompression: document.getElementById('averageCompression'),
-            batchImageGrid: document.getElementById('batchImageGrid')
+            batchImageGrid: document.getElementById('batchImageGrid'),
+            exportReportTxtBtn: document.getElementById('exportReportTxtBtn'),
+            exportReportMdBtn: document.getElementById('exportReportMdBtn')
         };
     }
 
@@ -72,7 +74,7 @@ class ImageCompressor {
 
     bindEvents() {
         // Simplified event binding for testing
-        const { uploadArea, fileInput, qualitySlider, compressBtn, downloadBtn, downloadAllBtn } = this.elements;
+        const { uploadArea, fileInput, qualitySlider, compressBtn, downloadBtn, downloadAllBtn, exportReportTxtBtn, exportReportMdBtn } = this.elements;
         
         if (uploadArea) {
             uploadArea.addEventListener('click', (e) => {
@@ -100,6 +102,14 @@ class ImageCompressor {
 
         if (downloadAllBtn) {
             downloadAllBtn.addEventListener('click', () => this.downloadAllCompressedImages());
+        }
+
+        if (exportReportTxtBtn) {
+            exportReportTxtBtn.addEventListener('click', () => this.exportOptimizationReport('txt'));
+        }
+
+        if (exportReportMdBtn) {
+            exportReportMdBtn.addEventListener('click', () => this.exportOptimizationReport('md'));
         }
     }
 
@@ -695,6 +705,133 @@ class ImageCompressor {
         card.appendChild(downloadBtn);
         
         return card;
+    }
+
+    exportOptimizationReport(format = 'txt') {
+        const report = this.generateOptimizationReport(format);
+        if (!report) {
+            this.showError('No compression results available yet. Compress an image first.');
+            return;
+        }
+
+        const mimeType = format === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8';
+        const blob = new Blob([report], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = this.generateReportFileName(format);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    generateReportFileName(format = 'txt') {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const mode = this.compressedImages?.length > 0 && !(this.originalFile && this.compressedDataUrl) ? 'batch' : (this.compressedImages?.length > 1 ? 'batch' : 'single');
+        return `optimization-report_${mode}_${stamp}.${format}`;
+    }
+
+    estimateTransferSeconds(bytes, mbps) {
+        if (!bytes || !mbps || mbps <= 0) return 0;
+        return (bytes * 8) / (mbps * 1000 * 1000);
+    }
+
+    formatSeconds(seconds) {
+        if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
+        return `${seconds.toFixed(2)}s`;
+    }
+
+    buildLoadTimeEstimate(originalBytes, compressedBytes) {
+        const profiles = [
+            { label: 'Fast 3G', mbps: 1.6 },
+            { label: 'Slow 4G', mbps: 9 },
+            { label: 'Wi‑Fi', mbps: 30 },
+        ];
+
+        const estimates = profiles.map((p) => {
+            const before = this.estimateTransferSeconds(originalBytes, p.mbps);
+            const after = this.estimateTransferSeconds(compressedBytes, p.mbps);
+            const saved = Math.max(0, before - after);
+            return `${p.label}: ~${this.formatSeconds(saved)} saved`;
+        });
+
+        return `Estimated transfer-time savings (${estimates.join(' · ')})`;
+    }
+
+    generateOptimizationReport(format = 'txt') {
+        const hasSingle = this.originalFile && this.compressedDataUrl;
+        const hasBatch = this.compressedImages && this.compressedImages.length > 0;
+
+        if (!hasSingle && !hasBatch) return '';
+
+        const isBatch = hasBatch && (!hasSingle || this.compressedImages.length > 1);
+        const originalBytes = isBatch
+            ? this.compressedImages.reduce((sum, img) => sum + img.originalSize, 0)
+            : this.originalFile.size;
+        const compressedBytes = isBatch
+            ? this.compressedImages.reduce((sum, img) => sum + img.compressedSize, 0)
+            : this.getDataUrlSize(this.compressedDataUrl);
+
+        const savedBytes = Math.max(0, originalBytes - compressedBytes);
+        const reductionPct = originalBytes > 0 ? ((savedBytes / originalBytes) * 100) : 0;
+        const ratio = compressedBytes > 0 ? (originalBytes / compressedBytes) : 0;
+        const transferEstimate = this.buildLoadTimeEstimate(originalBytes, compressedBytes);
+        const timestamp = new Date().toLocaleString();
+        const selectedFormat = this.elements.formatSelect?.value || 'jpeg';
+        const quality = this.elements.qualitySlider?.value || '70';
+
+        const lines = format === 'md'
+            ? [
+                '# Optimization Report',
+                '',
+                `- **Timestamp:** ${timestamp}`,
+                `- **Mode:** ${isBatch ? `Batch (${this.compressedImages.length} images)` : 'Single image'}`,
+                `- **Selected format:** ${selectedFormat.toUpperCase()}`,
+                `- **Quality:** ${quality}%`,
+                '',
+                '## Summary',
+                '',
+                `- Original size: ${this.formatFileSize(originalBytes)}`,
+                `- Compressed size: ${this.formatFileSize(compressedBytes)}`,
+                `- Size reduction: ${reductionPct.toFixed(1)}% (${this.formatFileSize(savedBytes)})`,
+                `- Compression ratio: ${ratio.toFixed(2)}:1`,
+                `- ${transferEstimate}`,
+            ]
+            : [
+                'Optimization Report',
+                '===================',
+                `Timestamp: ${timestamp}`,
+                `Mode: ${isBatch ? `Batch (${this.compressedImages.length} images)` : 'Single image'}`,
+                `Selected format: ${selectedFormat.toUpperCase()}`,
+                `Quality: ${quality}%`,
+                '',
+                'Summary',
+                '-------',
+                `Original size: ${this.formatFileSize(originalBytes)}`,
+                `Compressed size: ${this.formatFileSize(compressedBytes)}`,
+                `Size reduction: ${reductionPct.toFixed(1)}% (${this.formatFileSize(savedBytes)})`,
+                `Compression ratio: ${ratio.toFixed(2)}:1`,
+                transferEstimate,
+            ];
+
+        if (isBatch) {
+            if (format === 'md') {
+                lines.push('', '## Per-image results', '');
+            } else {
+                lines.push('', 'Per-image results', '-----------------');
+            }
+
+            this.compressedImages.forEach((img, index) => {
+                lines.push(`${index + 1}. ${img.originalFile.name}: ${this.formatFileSize(img.originalSize)} -> ${this.formatFileSize(img.compressedSize)} (${img.reduction.toFixed(1)}% reduction)`);
+            });
+        }
+
+        return `${lines.join('\n')}\n`;
     }
 
     getDataUrlSize(dataUrl) {
