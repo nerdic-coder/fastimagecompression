@@ -93,4 +93,20 @@ describe('ImageCompressor', () => {
     expect(compressor.isValidImageFile(invalidFile)).toBe(false);
     expect(compressor.isValidImageFile(largeFile)).toBe(false);
   });
+
+  test('should include reduction class in batch image stats markup', () => {
+    const compressor = new ImageCompressor();
+
+    const card = compressor.createBatchImageCard({
+      originalFile: { name: 'batch-photo.jpg' },
+      originalSize: 5000,
+      compressedSize: 3000,
+      reduction: 40,
+      compressedDataUrl: 'data:image/jpeg;base64,abc'
+    }, 0);
+
+    const reductionRow = card.querySelector('.batch-image-reduction');
+    expect(reductionRow).not.toBeNull();
+    expect(reductionRow.textContent).toContain('Reduction: 40.0%');
+  });
 });
