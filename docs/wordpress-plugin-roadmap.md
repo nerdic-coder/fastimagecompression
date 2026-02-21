@@ -48,9 +48,11 @@ This document defines an implementation path for a WordPress plugin version of F
 - Unsupported codec messaging ✅
 - Basic success/failure counters in admin ✅
 
-## Open questions
-- Keep originals by default?
-- Metadata retention policy (EXIF/IPTC)?
-- Per-site defaults vs per-action override?
+## Decisions after feedback
+- Keep originals by default: **Yes** (site setting, default enabled)
+- Metadata retention policy (EXIF/IPTC): **Optional setting** (best effort)
+- Per-site defaults vs per-action override: **Both**
+  - Site-wide defaults in plugin settings
+  - One-time per-action overrides available in batch optimize UI
 
 Closes #42
