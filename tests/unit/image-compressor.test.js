@@ -109,4 +109,61 @@ describe('ImageCompressor', () => {
     expect(reductionRow).not.toBeNull();
     expect(reductionRow.textContent).toContain('Reduction: 40.0%');
   });
+
+  test('should detect AVIF support and disable it on Safari iOS', () => {
+    const compressor = new ImageCompressor();
+    compressor.preCreateCanvas();
+
+    compressor.canvas.toDataURL = jest.fn((mime) => `data:${mime};base64,mock`);
+    compressor.isSafariIOS = false;
+    let support = compressor.detectSupportedOutputFormats();
+    expect(support.avif).toBe(true);
+
+    compressor.isSafariIOS = true;
+    support = compressor.detectSupportedOutputFormats();
+    expect(support.avif).toBe(false);
+  });
+
+  test('should gracefully fallback to JPEG when AVIF encoding is unavailable', async () => {
+    const compressor = new ImageCompressor();
+    compressor.preCreateCanvas();
+
+    compressor.supportedOutputFormats = { jpeg: true, webp: true, avif: true };
+    compressor.canvas.toDataURL = jest.fn((mime) => {
+      if (mime === 'image/avif') {
+        return 'data:image/png;base64,fallback';
+      }
+      return 'data:image/jpeg;base64,ok';
+    });
+
+    const result = await compressor.compressImageData({ width: 100, height: 100 }, 0.8, 'avif');
+    expect(result.startsWith('data:image/jpeg')).toBe(true);
+  });
+
+  test('should hide unsupported AVIF option in format select', () => {
+    const compressor = new ImageCompressor();
+    const formatSelect = document.createElement('select');
+    formatSelect.innerHTML = `
+      <option value="jpeg">JPEG</option>
+      <option value="webp">WebP</option>
+      <option value="avif">AVIF</option>
+    `;
+
+    compressor.elements = { formatSelect };
+    compressor.supportedOutputFormats = { jpeg: true, webp: true, avif: false };
+
+    compressor.applyOutputFormatAvailability();
+
+    expect(formatSelect.querySelector('option[value="avif"]').hidden).toBe(true);
+    expect(formatSelect.querySelector('option[value="avif"]').disabled).toBe(true);
+  });
+
+  test('should use data URL mime type for output file extension', () => {
+    const compressor = new ImageCompressor();
+    compressor.originalFile = { name: 'test-image.jpg' };
+    compressor.elements = { formatSelect: { value: 'avif' }, qualitySlider: { value: '80' } };
+
+    const fileName = compressor.generateFileName('data:image/jpeg;base64,abc');
+    expect(fileName).toBe('test-image_compressed_80%.jpeg');
+  });
 });

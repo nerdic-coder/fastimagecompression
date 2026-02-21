@@ -20,6 +20,7 @@ class ImageCompressor {
         };
         this.usesNativeFileInput = false;
         this.isSafariIOS = false;
+        this.supportedOutputFormats = { jpeg: true, webp: true, avif: false };
     }
 
     initialize() {
@@ -27,6 +28,8 @@ class ImageCompressor {
         this.bindEvents();
         this.preCreateCanvas();
         this.detectSafariAndApplyFixes();
+        this.detectSupportedOutputFormats();
+        this.applyOutputFormatAvailability();
     }
 
     initializeElements() {
@@ -107,8 +110,66 @@ class ImageCompressor {
         const userAgent = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
         const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
-        
+
         this.isSafariIOS = isIOS && isSafari;
+    }
+
+    detectSupportedOutputFormats() {
+        const support = { jpeg: true, webp: false, avif: false };
+
+        if (!this.canvas || typeof this.canvas.toDataURL !== 'function') {
+            this.supportedOutputFormats = support;
+            return support;
+        }
+
+        const canEncode = (mimeType) => {
+            try {
+                const dataUrl = this.canvas.toDataURL(mimeType, 0.8);
+                return typeof dataUrl === 'string' && dataUrl.startsWith(`data:${mimeType}`);
+            } catch (error) {
+                return false;
+            }
+        };
+
+        support.webp = canEncode('image/webp');
+        support.avif = !this.isSafariIOS && canEncode('image/avif');
+        this.supportedOutputFormats = support;
+        return support;
+    }
+
+    applyOutputFormatAvailability() {
+        const { formatSelect } = this.elements;
+        if (!formatSelect || !formatSelect.querySelector) return;
+
+        const labels = { jpeg: 'JPEG', webp: 'WebP', avif: 'AVIF' };
+        ['jpeg', 'webp', 'avif'].forEach((format) => {
+            let option = formatSelect.querySelector(`option[value="${format}"]`);
+            if (!option && typeof document !== 'undefined' && document.createElement) {
+                option = document.createElement('option');
+                option.value = format;
+                option.textContent = labels[format] || format.toUpperCase();
+                formatSelect.appendChild(option);
+            }
+            if (!option) return;
+            option.hidden = !this.supportedOutputFormats[format];
+            option.disabled = !this.supportedOutputFormats[format];
+        });
+
+        const selected = formatSelect.value || 'jpeg';
+        if (!this.supportedOutputFormats[selected]) {
+            formatSelect.value = 'jpeg';
+        }
+    }
+
+    resolveOutputFormat(format) {
+        const requestedFormat = format || 'jpeg';
+        if (requestedFormat === 'avif' && this.isSafariIOS) {
+            return 'jpeg';
+        }
+        if (this.supportedOutputFormats[requestedFormat]) {
+            return requestedFormat;
+        }
+        return 'jpeg';
     }
 
     handleFileSelect(e) {
@@ -543,13 +604,18 @@ class ImageCompressor {
             
             this.ctx.drawImage(image, 0, 0);
             
+            const safeFormat = this.resolveOutputFormat(format);
             const mimeTypes = {
                 'jpeg': 'image/jpeg',
-                'webp': 'image/webp'
+                'webp': 'image/webp',
+                'avif': 'image/avif'
             };
-            const mimeType = mimeTypes[format] || 'image/jpeg';
-            
-            const dataUrl = this.canvas.toDataURL(mimeType, quality);
+            const requestedMimeType = mimeTypes[safeFormat] || 'image/jpeg';
+
+            let dataUrl = this.canvas.toDataURL(requestedMimeType, quality);
+            if (!dataUrl.startsWith(`data:${requestedMimeType}`)) {
+                dataUrl = this.canvas.toDataURL('image/jpeg', quality);
+            }
             resolve(dataUrl);
         });
     }
@@ -710,7 +776,7 @@ class ImageCompressor {
         }
 
         const link = document.createElement('a');
-        link.download = this.generateFileName();
+        link.download = this.generateFileName(this.compressedDataUrl);
         link.href = this.compressedDataUrl;
         
         document.body.appendChild(link);
@@ -720,7 +786,7 @@ class ImageCompressor {
 
     downloadSingleCompressedImage(imgData) {
         const link = document.createElement('a');
-        link.download = this.generateBatchFileName(imgData.originalFile);
+        link.download = this.generateBatchFileName(imgData.originalFile, imgData.compressedDataUrl);
         link.href = imgData.compressedDataUrl;
         
         document.body.appendChild(link);
@@ -752,7 +818,7 @@ class ImageCompressor {
         
         this.compressedImages.forEach((imgData, index) => {
             const base64Data = imgData.compressedDataUrl.split(',')[1];
-            const fileName = this.generateBatchFileName(imgData.originalFile);
+            const fileName = this.generateBatchFileName(imgData.originalFile, imgData.compressedDataUrl);
             zip.file(fileName, base64Data, { base64: true });
         });
         
@@ -778,21 +844,32 @@ class ImageCompressor {
         });
     }
 
-    generateFileName() {
+    getFormatFromDataUrl(dataUrl, fallbackFormat = 'jpeg') {
+        if (!dataUrl || typeof dataUrl !== 'string') return fallbackFormat;
+        if (dataUrl.startsWith('data:image/avif')) return 'avif';
+        if (dataUrl.startsWith('data:image/webp')) return 'webp';
+        if (dataUrl.startsWith('data:image/jpeg')) return 'jpeg';
+        if (dataUrl.startsWith('data:image/png')) return 'png';
+        return fallbackFormat;
+    }
+
+    generateFileName(dataUrl = null) {
         const originalName = this.originalFile.name;
         const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-        const format = this.elements.formatSelect.value;
+        const fallbackFormat = this.elements.formatSelect.value;
+        const format = this.getFormatFromDataUrl(dataUrl, fallbackFormat);
         const quality = this.elements.qualitySlider.value;
-        
+
         return `${nameWithoutExt}_compressed_${quality}%.${format}`;
     }
 
-    generateBatchFileName(file) {
+    generateBatchFileName(file, dataUrl = null) {
         const originalName = file.name;
         const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-        const format = this.elements.formatSelect.value;
+        const fallbackFormat = this.elements.formatSelect.value;
+        const format = this.getFormatFromDataUrl(dataUrl, fallbackFormat);
         const quality = this.elements.qualitySlider.value;
-        
+
         return `${nameWithoutExt}_compressed_${quality}%.${format}`;
     }
 
