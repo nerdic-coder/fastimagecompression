@@ -537,8 +537,16 @@ select {
     border-radius: 8px;
     font-size: 1rem;
     background: white;
+    color: #212529;
+    color-scheme: light;
     cursor: pointer;
     transition: border-color 0.3s ease;
+}
+
+/* Keep native option popups readable when the page uses the dark theme. */
+select option {
+    background: #ffffff;
+    color: #212529;
 }
 
 select:focus {
@@ -1893,6 +1901,12 @@ html.theme-dark input,
 html.theme-dark textarea {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.18);
+    color: #f0f2fa;
+    color-scheme: dark;
+}
+
+html.theme-dark select option {
+    background: #202637;
     color: #f0f2fa;
 }
 
