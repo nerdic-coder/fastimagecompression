@@ -2,121 +2,163 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://fastimagecompression.com/about.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/compress-gif.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-images-for-email.html</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-images-for-wordpress.html</loc>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/compress-jpeg.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/compress-png.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-to-1-mb.html</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-to-100-kb.html</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-to-200-kb.html</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fastimagecompression.com/compress-to-500-kb.html</loc>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/compress-webp.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/contact.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-batch-compress-workflow.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-choose-image-quality.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-compress-images-for-wordpress.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-core-web-vitals-images.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-image-formats-for-social-media.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-image-optimization-checklist.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-jpeg-vs-png-webp.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-lossy-vs-lossless.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-resize-before-compress.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guide-webp-vs-avif.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/guides.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://fastimagecompression.com/privacy-policy.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://fastimagecompression.com/private-image-compression.html</loc>
+    <lastmod>2026-08-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://fastimagecompression.com/terms-of-service.html</loc>
-    <lastmod>2026-02-05</lastmod>
+    <lastmod>2026-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

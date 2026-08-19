@@ -18,7 +18,7 @@ class ImageCompressor {
         };
         this.usesNativeFileInput = false;
         this.supportedOutputFormats = { jpeg: true, webp: true, avif: false };
-        
+
         // Defer heavy initialization with Safari iOS compatibility
         if (typeof requestIdleCallback !== 'undefined') {
             requestIdleCallback(() => this.initialize());
@@ -27,7 +27,7 @@ class ImageCompressor {
             setTimeout(() => this.initialize(), 0);
         }
     }
-    
+
     initialize() {
         this.initializeElements();
         this.bindEvents();
@@ -35,18 +35,27 @@ class ImageCompressor {
         this.detectSafariAndApplyFixes();
         this.detectSupportedOutputFormats();
         this.applyOutputFormatAvailability();
+        this.applyLandingPreset();
 
         // Analytics
         this.analytics = {
             enabled: typeof window !== 'undefined' && typeof window.gtag === 'function',
         };
-        
+
         // Initialize FAQ after a short delay to ensure DOM is ready
         setTimeout(() => {
             this.initializeFAQ();
         }, 100);
     }
-    
+
+    applyLandingPreset() {
+        const params = new URLSearchParams(window.location?.search || '');
+        const target = Number(params.get('targetSizeKb') || 0);
+        if (target > 0 && this.elements?.targetSizeKb) this.elements.targetSizeKb.value = String(target);
+        const maxDimension = Number(params.get('maxDimension') || 0);
+        if (maxDimension > 0 && this.elements?.maxDimension) this.elements.maxDimension.value = String(maxDimension);
+    }
+
     detectSafariAndApplyFixes() {
         const userAgent = navigator.userAgent || '';
         const isIOS = /iPad|iPhone|iPod/.test(userAgent);
@@ -56,7 +65,7 @@ class ImageCompressor {
         const hasTouchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
         const isSmallScreen = window.innerWidth <= 768; // Force mobile UI on small screens
         const treatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || isSmallScreen;
-        
+
         // Store Safari iOS detection for later use
         this.isSafariIOS = isIOS && isSafari;
 
@@ -76,8 +85,8 @@ class ImageCompressor {
 
         this.configureFileInput(isIOS || isMobileUA);
 
-        const { uploadArea, fileInput, mobileUploadButton } = this.elements;
-        if (!uploadArea || !fileInput) {
+        const { uploadArea, fileInput, mobileUploadButton } = this.elements || {};
+        if (!uploadArea || !fileInput || !fileInput.classList) {
             console.error('Upload area or file input not found');
             return;
         }
@@ -101,7 +110,7 @@ class ImageCompressor {
             if (mobileHint) {
                 mobileHint.textContent = 'Tap "Choose Photos" to select from library, camera, or files. You can select multiple at once!';
             }
-            
+
             // Configure format options for iOS
             this.configureFormatOptionsForIOS();
         } else {
@@ -118,36 +127,38 @@ class ImageCompressor {
         window.addEventListener('resize', () => {
             const newIsSmallScreen = window.innerWidth <= 768;
             const newTreatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || newIsSmallScreen;
-            
+
             if (newTreatAsMobile !== treatAsMobile) {
                 console.log('Screen size changed, updating mobile detection');
                 uploadArea.classList.toggle('touch-device', newTreatAsMobile);
                 uploadArea.classList.toggle('no-touch', !newTreatAsMobile);
             }
         });
-        
+
         // Debug: Add a test function to force show controls
         window.testShowControls = () => {
             console.log('Testing showControls function');
             this.showControls();
         };
     }
-    
+
     configureFileInput(isMobile) {
-        const { fileInput } = this.elements;
+        const { fileInput } = this.elements || {};
+        if (!fileInput) return;
 
         console.log('Configuring file input for:', isMobile ? 'mobile' : 'desktop');
-        
+
         // Remove all potentially problematic attributes for both mobile and desktop
+        if (typeof fileInput.removeAttribute !== 'function') return;
         fileInput.removeAttribute('capture');
         fileInput.removeAttribute('webkitdirectory');
         fileInput.removeAttribute('directory');
-        
+
         // Set only the essential attributes for both mobile and desktop
         fileInput.setAttribute('type', 'file');
         fileInput.setAttribute('accept', 'image/*');
         fileInput.setAttribute('multiple', 'true');
-        
+
         console.log('File input configured - native picker will be used');
         console.log('File input attributes after configuration:', {
             type: fileInput.getAttribute('type'),
@@ -158,7 +169,7 @@ class ImageCompressor {
             accept: fileInput.getAttribute('accept')
         });
     }
-    
+
     configureFormatOptionsForIOS() {
         const { formatSelect } = this.elements;
 
@@ -212,7 +223,7 @@ class ImageCompressor {
 
     applyOutputFormatAvailability() {
         const { formatSelect } = this.elements;
-        if (!formatSelect) return;
+        if (!formatSelect || typeof formatSelect.querySelector !== 'function') return;
 
         const labels = { jpeg: 'JPEG', webp: 'WebP', avif: 'AVIF' };
         ['jpeg', 'webp', 'avif'].forEach((format) => {
@@ -244,42 +255,42 @@ class ImageCompressor {
         }
         return 'jpeg';
     }
-    
+
     getRecommendedFormat(originalFile) {
         if (!originalFile || !originalFile.type) {
             return 'jpeg'; // Default fallback
         }
-        
+
         const originalType = originalFile.type.toLowerCase();
         const fileName = originalFile.name.toLowerCase();
-        
+
         // If original is WebP, keep as WebP (if supported)
         if (originalType.includes('webp') || fileName.endsWith('.webp')) {
             return 'webp';
         }
-        
+
         // For all other formats (JPEG, PNG, GIF, etc.), recommend JPEG for best compression
         return 'jpeg';
     }
-    
+
     updateFormatRecommendation() {
         if (!this.originalFile) return;
-        
+
         const recommendedFormat = this.getRecommendedFormat(this.originalFile);
         const { formatSelect } = this.elements;
-        
+
         if (formatSelect && formatSelect.value !== recommendedFormat) {
             console.log(`Recommending format change from ${formatSelect.value} to ${recommendedFormat} for better compression`);
-            
+
             // Update the format select
             formatSelect.value = recommendedFormat;
-            
+
             // Show a subtle hint
             const formatLabel = document.querySelector('label[for="formatSelect"]');
             if (formatLabel && !this.isSafariIOS) {
                 const originalText = formatLabel.textContent.replace(/ \(.*\)/, '');
                 formatLabel.innerHTML = `${originalText} <small style="color: #28a745;">(Recommended: ${recommendedFormat.toUpperCase()})</small>`;
-                
+
                 // Remove the hint after 5 seconds
                 setTimeout(() => {
                     formatLabel.textContent = originalText;
@@ -287,7 +298,7 @@ class ImageCompressor {
             }
         }
     }
-    
+
     initializeElements() {
         // Cache DOM elements to reduce repeated queries
         this.elements = {
@@ -298,6 +309,14 @@ class ImageCompressor {
             qualitySlider: document.getElementById('qualitySlider'),
             qualityValue: document.getElementById('qualityValue'),
             formatSelect: document.getElementById('formatSelect'),
+            maxDimension: document.getElementById('maxDimension'),
+            targetSizeKb: document.getElementById('targetSizeKb'),
+            removeMetadata: document.getElementById('removeMetadata'),
+            comparisonPanel: document.getElementById('comparisonPanel'),
+            comparisonOriginal: document.getElementById('comparisonOriginal'),
+            comparisonCompressed: document.getElementById('comparisonCompressed'),
+            comparisonSlider: document.getElementById('comparisonSlider'),
+            metadataResult: document.getElementById('metadataResult'),
             presetButtons: document.querySelectorAll('.preset-btn'),
             presetHint: document.getElementById('presetHint'),
             compressBtn: document.getElementById('compressBtn'),
@@ -334,7 +353,7 @@ class ImageCompressor {
             copyShareLinkBtn: document.getElementById('copyShareLinkBtn'),
             shareFeedback: document.getElementById('shareFeedback')
         };
-        
+
         // Debug: Check if critical elements are found
         console.log('Element initialization debug:', {
             uploadArea: !!this.elements.uploadArea,
@@ -343,7 +362,7 @@ class ImageCompressor {
             progressSection: !!this.elements.progressSection,
             resultsSection: !!this.elements.resultsSection
         });
-        
+
         if (!this.elements.controls) {
             console.error('CRITICAL: Controls element not found!');
         }
@@ -360,6 +379,7 @@ class ImageCompressor {
             uploadArea,
             fileInput,
             qualitySlider,
+            comparisonSlider,
             compressBtn,
             downloadBtn,
             downloadAllBtn,
@@ -367,10 +387,10 @@ class ImageCompressor {
             copyShareTextBtn,
             presetButtons
         } = this.elements;
-        
+
         // Use passive listeners where possible for better performance
         const options = { passive: true };
-        
+
         // Upload events - Simplified for better compatibility
         uploadArea.addEventListener('click', (e) => {
             if (this.usesNativeFileInput) {
@@ -384,7 +404,7 @@ class ImageCompressor {
             e.preventDefault();
             e.stopPropagation();
             console.log('Upload area clicked, triggering file input');
-            
+
             // Simple direct click without complex timing
             try {
                 fileInput.click();
@@ -394,7 +414,7 @@ class ImageCompressor {
                 this.showError('Unable to open file picker. Please try the "Choose Photos" button below.');
             }
         }, false);
-        
+
         // Add touch events for mobile Safari
         uploadArea.addEventListener('touchstart', (e) => {
             if (this.usesNativeFileInput) {
@@ -439,7 +459,7 @@ class ImageCompressor {
                 }
             });
         }
-        
+
         // Add debugging for file input click
         fileInput.addEventListener('click', (e) => {
             console.log('File input clicked directly - this should open file picker');
@@ -452,14 +472,15 @@ class ImageCompressor {
                 accept: e.target.getAttribute('accept')
             });
         }, false);
-        
+
         // Drag and drop events
         uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
         uploadArea.addEventListener('dragleave', (e) => this.handleDragLeave(e));
         uploadArea.addEventListener('drop', (e) => this.handleDrop(e));
-        
+
         // Control events with throttling
         qualitySlider.addEventListener('input', this.throttle((e) => this.updateQualityValue(e), 16), options);
+        if (comparisonSlider) comparisonSlider.addEventListener('input', (e) => this.updateComparisonPosition(e.target.value));
 
         if (presetButtons?.length) {
             presetButtons.forEach((button) => {
@@ -500,7 +521,7 @@ class ImageCompressor {
             this.elements.copyShareLinkBtn.addEventListener('click', () => this.copyShareLink(), options);
         }
     }
-    
+
     trackEvent(name, params = {}) {
         try {
             if (!this.analytics?.enabled) return;
@@ -601,7 +622,7 @@ class ImageCompressor {
     handleDrop(e) {
         e.preventDefault();
         this.elements.uploadArea.classList.remove('dragover');
-        
+
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             this.processFiles(Array.from(files));
@@ -617,7 +638,7 @@ class ImageCompressor {
             multiple: e.target.getAttribute('multiple'),
             accept: e.target.getAttribute('accept')
         });
-        
+
         if (files.length > 0) {
             console.log('File names:', files.map(f => f.name));
             console.log('File details:', files.map(f => ({
@@ -636,7 +657,7 @@ class ImageCompressor {
 
     processFiles(files) {
         console.log('processFiles called with', files.length, 'files');
-        
+
         // Filter valid image files
         const validFiles = files.filter(file => {
             const hasImageMimeType = file.type && file.type.startsWith('image/');
@@ -668,7 +689,7 @@ class ImageCompressor {
         }
 
         this.originalFiles = validFiles;
-        
+
         if (validFiles.length === 1) {
             // Single file - use existing single file flow
             console.log('Processing single file:', validFiles[0].name);
@@ -690,10 +711,10 @@ class ImageCompressor {
 
         // Create image object with Safari iOS compatibility
         const img = new Image();
-        
+
         // Safari iOS specific fixes
         img.crossOrigin = 'anonymous';
-        
+
         img.onload = () => {
             console.log('Image loaded successfully:', file.name);
             this.originalImage = img;
@@ -734,17 +755,17 @@ class ImageCompressor {
     showControls() {
         console.log('showControls called');
         const { controls, resultsSection, progressSection } = this.elements;
-        
+
         if (!controls) {
             console.error('Controls element not found!');
             return;
         }
-        
+
         console.log('Showing controls, hiding results and progress sections');
         controls.style.display = 'block';
         resultsSection.style.display = 'none';
         progressSection.style.display = 'none';
-        
+
         // Use requestAnimationFrame for smoother animations
         requestAnimationFrame(() => {
             controls.style.transition = 'all 0.3s ease';
@@ -762,16 +783,16 @@ class ImageCompressor {
     showProgressSection(files) {
         const { progressSection, imageList } = this.elements;
         progressSection.style.display = 'block';
-        
+
         // Clear previous image list
         imageList.innerHTML = '';
-        
+
         // Add each file to the progress list
         files.forEach((file, index) => {
             const imageItem = this.createImageListItem(file, index);
             imageList.appendChild(imageItem);
         });
-        
+
         // Initialize progress
         this.batchProgress = {
             current: 0,
@@ -779,7 +800,7 @@ class ImageCompressor {
             completed: 0,
             errors: 0
         };
-        
+
         this.updateProgress();
     }
 
@@ -787,45 +808,45 @@ class ImageCompressor {
         const imageItem = document.createElement('div');
         imageItem.className = 'image-item';
         imageItem.dataset.index = index;
-        
+
         // Create thumbnail
         const img = document.createElement('img');
         img.src = URL.createObjectURL(file);
         img.alt = file.name;
-        
+
         // Create info section
         const info = document.createElement('div');
         info.className = 'image-item-info';
-        
+
         const name = document.createElement('div');
         name.className = 'image-item-name';
         name.textContent = file.name;
-        
+
         const size = document.createElement('div');
         size.className = 'image-item-size';
         size.textContent = this.formatFileSize(file.size);
-        
+
         info.appendChild(name);
         info.appendChild(size);
-        
+
         // Create status
         const status = document.createElement('div');
         status.className = 'image-item-status processing';
         status.textContent = 'Waiting...';
-        
+
         imageItem.appendChild(img);
         imageItem.appendChild(info);
         imageItem.appendChild(status);
-        
+
         return imageItem;
     }
 
     updateProgress() {
         const { progressFill, progressText, progressPercent } = this.elements;
         const { current, total, completed, errors } = this.batchProgress;
-        
+
         const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-        
+
         progressFill.style.width = `${percentage}%`;
         progressText.textContent = `${completed} of ${total} images processed`;
         progressPercent.textContent = `${percentage}%`;
@@ -853,7 +874,7 @@ class ImageCompressor {
                     this.batchProgress.errors++;
                     break;
             }
-            
+
             this.updateProgress();
         }
     }
@@ -905,38 +926,38 @@ class ImageCompressor {
 
         this.isProcessing = true;
         const { compressBtn, qualitySlider, formatSelect } = this.elements;
-        
+
         // Show loading state
-        compressBtn.innerHTML = '<div class="loading"></div> Compressing...';
-        compressBtn.disabled = true;
+        if (compressBtn) { compressBtn.innerHTML = '<div class="loading"></div> Compressing...'; compressBtn.disabled = true; }
 
         try {
             const originalQuality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
-            
+            const options = this.getCompressionOptions();
+
             // Update progress for single image
             this.updateImageStatus(0, 'processing');
-            
+
             // Try compression with original settings first
-            let compressedDataUrl = await this.compressImageWithIdleCallback(this.originalImage, originalQuality, format);
+            let compressedDataUrl = await this.compressWithTargetSize(this.originalImage, originalQuality, format, options);
             let compressedSize = this.getDataUrlSize(compressedDataUrl);
             let finalQuality = originalQuality;
-            
+
             // If compression resulted in larger file, try with lower quality
             if (compressedSize >= this.originalFile.size && originalQuality > 0.3) {
                 console.log('Compression increased file size, trying lower quality...');
                 compressBtn.innerHTML = '<div class="loading"></div> Optimizing compression...';
-                
+
                 // Try progressively lower quality settings
                 const qualityLevels = [0.7, 0.5, 0.3, 0.2];
                 for (const testQuality of qualityLevels) {
                     if (testQuality >= originalQuality) continue;
-                    
+
                     const testCompressed = await this.compressImageWithIdleCallback(this.originalImage, testQuality, format);
                     const testSize = this.getDataUrlSize(testCompressed);
-                    
+
                     console.log(`Testing quality ${testQuality}: original=${this.originalFile.size}, compressed=${testSize}`);
-                    
+
                     if (testSize < this.originalFile.size) {
                         compressedDataUrl = testCompressed;
                         compressedSize = testSize;
@@ -946,7 +967,7 @@ class ImageCompressor {
                     }
                 }
             }
-            
+
             // Create compressed image object
             const compressedImg = new Image();
             compressedImg.onload = () => {
@@ -957,7 +978,7 @@ class ImageCompressor {
                 this.isProcessing = false;
             };
             compressedImg.src = compressedDataUrl;
-            
+
         } catch (error) {
             console.error('Compression error:', error);
             this.updateImageStatus(0, 'error', 'Compression failed');
@@ -970,24 +991,24 @@ class ImageCompressor {
     async compressBatchImages() {
         this.isBatchProcessing = true;
         const { compressBtn, qualitySlider, formatSelect } = this.elements;
-        
+
         // Show loading state
-        compressBtn.innerHTML = '<div class="loading"></div> Compressing...';
-        compressBtn.disabled = true;
+        if (compressBtn) { compressBtn.innerHTML = '<div class="loading"></div> Compressing...'; compressBtn.disabled = true; }
 
         try {
             const quality = parseInt(qualitySlider.value) / 100;
             const format = formatSelect.value;
-            
+            const options = this.getCompressionOptions();
+
             this.compressedImages = [];
-            
+
             // Process images sequentially to avoid overwhelming the browser
             for (let i = 0; i < this.originalFiles.length; i++) {
                 const file = this.originalFiles[i];
                 this.updateImageStatus(i, 'processing');
-                
+
                 try {
-                    const compressedData = await this.compressFile(file, quality, format);
+                    const compressedData = await this.compressFile(file, quality, format, options);
                     this.compressedImages.push({
                         originalFile: file,
                         compressedDataUrl: compressedData.dataUrl,
@@ -996,21 +1017,21 @@ class ImageCompressor {
                         compressedSize: compressedData.size,
                         reduction: compressedData.reduction
                     });
-                    
+
                     this.updateImageStatus(i, 'completed');
                 } catch (error) {
                     console.error(`Error compressing ${file.name}:`, error);
                     this.updateImageStatus(i, 'error', 'Compression failed');
                 }
-                
+
                 // Small delay to prevent blocking the UI
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-            
+
             this.displayBatchResults();
             this.resetCompressButton();
             this.isBatchProcessing = false;
-            
+
         } catch (error) {
             console.error('Batch compression error:', error);
             this.showError('Failed to compress images. Please try again.');
@@ -1019,26 +1040,26 @@ class ImageCompressor {
         }
     }
 
-    async compressFile(file, quality, format) {
+    async compressFile(file, quality, format, options = this.getCompressionOptions()) {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            
+
             // Safari iOS specific fixes
             if (this.isSafariIOS) {
                 img.crossOrigin = 'anonymous';
             }
-            
+
             img.onload = async () => {
                 try {
                     // Use main thread compression only (Service Worker disabled)
                     let compressedDataUrl;
-                    compressedDataUrl = await this.compressImageWithIdleCallback(img, quality, format);
-                    
+                    compressedDataUrl = await this.compressWithTargetSize(img, quality, format, options);
+
                     const compressedImg = new Image();
                     compressedImg.onload = () => {
                         const compressedSize = this.getDataUrlSize(compressedDataUrl);
                         const reduction = ((file.size - compressedSize) / file.size) * 100;
-                        
+
                         resolve({
                             dataUrl: compressedDataUrl,
                             image: compressedImg,
@@ -1047,17 +1068,17 @@ class ImageCompressor {
                         });
                     };
                     compressedImg.src = compressedDataUrl;
-                    
+
                 } catch (error) {
                     reject(error);
                 }
             };
-            
+
             img.onerror = (error) => {
                 console.error('Failed to load image in batch processing:', file.name, error);
                 reject(new Error(`Failed to load image: ${file.name}`));
             };
-            
+
             try {
                 img.src = URL.createObjectURL(file);
             } catch (error) {
@@ -1066,27 +1087,65 @@ class ImageCompressor {
             }
         });
     }
-    
+
     // Break compression into smaller chunks using idle callbacks
-    compressImageWithIdleCallback(image, quality, format) {
+    compressImageWithIdleCallback(image, quality, format, options = {}) {
         return new Promise((resolve) => {
             if (typeof window.requestIdleCallback !== 'undefined') {
                 // Use idle callback to avoid blocking main thread
                 window.requestIdleCallback(() => {
-                    const result = this.compressImageData(image, quality, format);
+                    const result = this.compressImageData(image, quality, format, options);
                     resolve(result);
                 }, { timeout: 5000 });
             } else {
                 // Fallback for browsers without requestIdleCallback (Safari iOS)
                 setTimeout(() => {
-                    const result = this.compressImageData(image, quality, format);
+                    const result = this.compressImageData(image, quality, format, options);
                     resolve(result);
                 }, 0);
             }
         });
     }
 
-    compressImageData(image, quality, format) {
+    getCompressionOptions() {
+        const maxDimension = Number(this.elements?.maxDimension?.value || 0);
+        const targetSizeKb = Number(this.elements?.targetSizeKb?.value || 0);
+        return { maxDimension: Number.isFinite(maxDimension) ? maxDimension : 0, targetSizeKb: Number.isFinite(targetSizeKb) ? targetSizeKb : 0, removeMetadata: this.elements?.removeMetadata?.checked !== false };
+    }
+
+    getOutputDimensions(width, height, maxDimension = 0) {
+        if (!maxDimension || Math.max(width, height) <= maxDimension) return { width, height };
+        const scale = maxDimension / Math.max(width, height);
+        return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+    }
+
+    async compressWithTargetSize(image, quality, format, options = {}) {
+        const targetBytes = Number(options.targetSizeKb || 0) * 1024;
+        if (!targetBytes) return this.compressImageWithIdleCallback(image, quality, format, options);
+        let low = 0.1, high = Math.max(0.1, Math.min(1, quality)), best = null;
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+            const candidateQuality = (low + high) / 2;
+            const candidate = await this.compressImageWithIdleCallback(image, candidateQuality, format, options);
+            const size = this.getDataUrlSize(candidate);
+            if (size <= targetBytes) { best = candidate; low = candidateQuality; } else { high = candidateQuality; }
+        }
+        if (best) return best;
+        return this.compressImageWithIdleCallback(image, 0.1, format, options);
+    }
+
+    updateComparisonPosition(value) {
+        const after = this.elements?.comparisonPanel?.querySelector('.comparison-after');
+        if (after) after.style.width = `${value}%`;
+    }
+
+    updateComparison(originalUrl, compressedUrl) {
+        const { comparisonPanel, comparisonOriginal, comparisonCompressed } = this.elements;
+        if (!comparisonPanel || !comparisonOriginal || !comparisonCompressed) return;
+        comparisonOriginal.src = originalUrl; comparisonCompressed.src = compressedUrl;
+        comparisonPanel.style.display = 'block'; this.updateComparisonPosition(this.elements.comparisonSlider?.value || 50);
+    }
+
+    compressImageData(image, quality, format, options = this.getCompressionOptions()) {
         return new Promise((resolve) => {
             console.log('Starting compression:', {
                 originalWidth: image.width,
@@ -1096,24 +1155,25 @@ class ImageCompressor {
                 isSafariIOS: this.isSafariIOS,
                 originalFormat: this.originalFile ? this.originalFile.type : 'unknown'
             });
-            
+
             // Use pre-created canvas to avoid DOM creation overhead
-            this.canvas.width = image.width;
-            this.canvas.height = image.height;
-            
+            const dimensions = this.getOutputDimensions(image.width, image.height, options.maxDimension);
+            this.canvas.width = dimensions.width;
+            this.canvas.height = dimensions.height;
+
             // Clear canvas first (important for Safari iOS)
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
+
             // Safari iOS specific optimizations
             if (this.isSafariIOS) {
                 // Set image smoothing for better compression
                 this.ctx.imageSmoothingEnabled = true;
                 this.ctx.imageSmoothingQuality = 'high';
             }
-            
+
             // Draw image on canvas
-            this.ctx.drawImage(image, 0, 0);
-            
+            this.ctx.drawImage(image, 0, 0, dimensions.width, dimensions.height);
+
             const safeFormat = this.resolveOutputFormat(format);
             const mimeTypes = {
                 'jpeg': 'image/jpeg',
@@ -1241,33 +1301,35 @@ class ImageCompressor {
     }
 
     displaySingleResults(compressedDataUrl) {
-        const { 
-            compressedImageEl, compressedDimensions, compressedSize, 
+        const {
+            compressedImageEl, compressedDimensions, compressedSize,
             sizeReduction, compressionRatio, singleLoadTimeEstimate, resultsSection, singleResults, batchResults, progressSection
         } = this.elements;
-        
+
         // Hide progress section when showing results
         progressSection.style.display = 'none';
-        
+
         // Show single results, hide batch results
         singleResults.style.display = 'block';
         batchResults.style.display = 'none';
-        
+
         // Display compressed image
         compressedImageEl.src = compressedDataUrl;
+        this.updateComparison(this.originalImage?.src, compressedDataUrl);
+        if (this.elements.metadataResult) this.elements.metadataResult.textContent = this.getCompressionOptions().removeMetadata ? 'Metadata removal: enabled (local re-encoding)' : 'Metadata removal: disabled';
         compressedDimensions.textContent = `${this.compressedImage.width} × ${this.compressedImage.height}`;
-        
+
         // Calculate file sizes
         const originalSize = this.originalFile.size;
         const compressedSizeBytes = this.getDataUrlSize(compressedDataUrl);
-        
+
         compressedSize.textContent = this.formatFileSize(compressedSizeBytes);
-        
+
         // Calculate compression stats
         const sizeReductionBytes = originalSize - compressedSizeBytes;
         const reductionPercent = ((sizeReductionBytes / originalSize) * 100).toFixed(1);
         const compressionRatioValue = (originalSize / compressedSizeBytes).toFixed(1);
-        
+
         // Check if compression actually reduced file size
         if (compressedSizeBytes >= originalSize) {
             console.warn('Compression resulted in larger file size!', {
@@ -1277,7 +1339,7 @@ class ImageCompressor {
                 format: this.elements.formatSelect.value,
                 originalFormat: this.originalFile.type
             });
-            
+
             // Show warning message with format-specific advice
             let warningMessage;
             if (this.elements.formatSelect.value === 'webp') {
@@ -1285,14 +1347,14 @@ class ImageCompressor {
             } else {
                 warningMessage = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))}). This can happen with certain image types or when using high quality settings. Try lowering the quality slider or changing the output format.`;
             }
-            
+
             // Show warning message
             sizeReduction.textContent = `⚠️ File size increased by ${Math.abs(parseFloat(reductionPercent))}% (${this.formatFileSize(Math.abs(sizeReductionBytes))})`;
             sizeReduction.style.color = '#dc3545'; // Red color for warning
-            
+
             compressionRatio.textContent = `1:${compressionRatioValue}`;
             compressionRatio.style.color = '#dc3545';
-            
+
             // Show helpful message
             this.showError(warningMessage);
         } else {
@@ -1302,13 +1364,14 @@ class ImageCompressor {
             compressionRatio.textContent = `${compressionRatioValue}:1`;
             compressionRatio.style.color = '#28a745';
         }
-        
+
         if (singleLoadTimeEstimate) {
             singleLoadTimeEstimate.textContent = this.buildLoadTimeEstimate(originalSize, compressedSizeBytes);
         }
 
         // Store compressed data for download
         this.compressedDataUrl = compressedDataUrl;
+        this.trackEvent('compression_complete', { original_bytes: originalSize, compressed_bytes: compressedSizeBytes });
 
         // Share hook (single image)
         this.updateShareHook({
@@ -1316,35 +1379,35 @@ class ImageCompressor {
             compressedBytes: compressedSizeBytes,
             imageCount: 1
         });
-        
+
         // Show results section with optimized animation
         resultsSection.style.display = 'block';
         requestAnimationFrame(() => {
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-            resultsSection.classList.add('success-animation');
-            setTimeout(() => resultsSection.classList.remove('success-animation'), 600);
+            if (typeof resultsSection.scrollIntoView === 'function') resultsSection.scrollIntoView({ behavior: 'smooth' });
+            resultsSection.classList?.add('success-animation');
+            setTimeout(() => resultsSection.classList?.remove('success-animation'), 600);
         });
     }
 
     displayBatchResults() {
-        const { 
+        const {
             resultsSection, singleResults, batchResults, downloadAllBtn, progressSection,
             totalImages, totalSizeReduction, averageCompression, batchLoadTimeEstimate, batchImageGrid
         } = this.elements;
-        
+
         // Hide progress section when showing results
         progressSection.style.display = 'none';
-        
+
         // Show batch results, hide single results
         singleResults.style.display = 'none';
         batchResults.style.display = 'block';
-        
+
         // Calculate summary stats
         const totalOriginalSize = this.compressedImages.reduce((sum, img) => sum + img.originalSize, 0);
         const totalCompressedSize = this.compressedImages.reduce((sum, img) => sum + img.compressedSize, 0);
         const totalReduction = ((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100;
         const averageReduction = this.compressedImages.reduce((sum, img) => sum + img.reduction, 0) / this.compressedImages.length;
-        
+
         // Update summary
         totalImages.textContent = this.compressedImages.length;
         totalSizeReduction.textContent = `${totalReduction.toFixed(1)}% (${this.formatFileSize(totalOriginalSize - totalCompressedSize)})`;
@@ -1359,37 +1422,37 @@ class ImageCompressor {
             compressedBytes: totalCompressedSize,
             imageCount: this.compressedImages.length
         });
-        
+
         // Clear and populate batch image grid
         batchImageGrid.innerHTML = '';
         this.compressedImages.forEach((imgData, index) => {
             const card = this.createBatchImageCard(imgData, index);
             batchImageGrid.appendChild(card);
         });
-        
+
         // Show download all button
         downloadAllBtn.style.display = 'inline-flex';
-        
+
         // Show results section with optimized animation
         resultsSection.style.display = 'block';
         requestAnimationFrame(() => {
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-            resultsSection.classList.add('success-animation');
-            setTimeout(() => resultsSection.classList.remove('success-animation'), 600);
+            if (typeof resultsSection.scrollIntoView === 'function') resultsSection.scrollIntoView({ behavior: 'smooth' });
+            resultsSection.classList?.add('success-animation');
+            setTimeout(() => resultsSection.classList?.remove('success-animation'), 600);
         });
     }
 
     createBatchImageCard(imgData, index) {
         const card = document.createElement('div');
         card.className = 'batch-image-card';
-        
+
         const img = document.createElement('img');
         img.src = imgData.compressedDataUrl;
         img.alt = imgData.originalFile.name;
-        
+
         const name = document.createElement('h5');
         name.textContent = imgData.originalFile.name;
-        
+
         const stats = document.createElement('div');
         stats.className = 'batch-image-stats';
         stats.innerHTML = `
@@ -1397,17 +1460,17 @@ class ImageCompressor {
             <div>Compressed: ${this.formatFileSize(imgData.compressedSize)}</div>
             <div class="batch-image-reduction">Reduction: ${imgData.reduction.toFixed(1)}%</div>
         `;
-        
+
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'btn btn-success batch-image-download';
         downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
         downloadBtn.onclick = () => this.downloadSingleCompressedImage(imgData);
-        
+
         card.appendChild(img);
         card.appendChild(name);
         card.appendChild(stats);
         card.appendChild(downloadBtn);
-        
+
         return card;
     }
 
@@ -1428,7 +1491,7 @@ class ImageCompressor {
         const link = document.createElement('a');
         link.download = this.generateFileName(this.compressedDataUrl);
         link.href = this.compressedDataUrl;
-        
+
         // Trigger download
         document.body.appendChild(link);
         link.click();
@@ -1439,7 +1502,7 @@ class ImageCompressor {
         const link = document.createElement('a');
         link.download = this.generateBatchFileName(imgData.originalFile, imgData.compressedDataUrl);
         link.href = imgData.compressedDataUrl;
-        
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -1468,27 +1531,35 @@ class ImageCompressor {
 
     async downloadAsZip() {
         const zip = new JSZip();
-        
+        const button = this.elements.downloadAllBtn;
+        if (button) { button.disabled = true; button.setAttribute('aria-busy', 'true'); button.textContent = 'Building ZIP…'; }
+
         this.compressedImages.forEach((imgData, index) => {
             // Convert data URL to blob
             const base64Data = imgData.compressedDataUrl.split(',')[1];
-            const fileName = this.generateBatchFileName(imgData.originalFile, imgData.compressedDataUrl);
+            const fileName = this.uniqueBatchFileName(imgData, index);
             zip.file(fileName, base64Data, { base64: true });
         });
-        
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' }, (metadata) => { if (button) button.textContent = `Building ZIP… ${Math.round(metadata.percent)}%`; });
         const url = URL.createObjectURL(zipBlob);
-        
+
         const link = document.createElement('a');
         link.download = `compressed_images_${new Date().getTime()}.zip`;
         link.href = url;
-        
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clean up
         URL.revokeObjectURL(url);
+        if (button) { button.disabled = false; button.removeAttribute('aria-busy'); button.innerHTML = '<i class="fas fa-download"></i> Download All as ZIP'; }
+    }
+
+    uniqueBatchFileName(imgData, index) {
+        const base = this.generateBatchFileName(imgData.originalFile, imgData.compressedDataUrl);
+        return `${String(index + 1).padStart(3, '0')}_${base}`;
     }
 
     downloadIndividualFiles() {
@@ -1529,20 +1600,26 @@ class ImageCompressor {
         return `${nameWithoutExt}_compressed_${quality}%.${format}`;
     }
 
+    isValidImageFile(file) {
+        const hasImageMimeType = file.type && file.type.startsWith('image/');
+        const hasImageExtension = file.name ? /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(file.name) : false;
+        return (hasImageMimeType || hasImageExtension) && file.size <= 10 * 1024 * 1024;
+    }
+
     formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
-        
+
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        
+
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     resetCompressButton() {
         const { compressBtn, compressBtnText } = this.elements;
         const fileCount = this.originalFiles.length;
-        
+
         if (fileCount === 1) {
             compressBtnText.textContent = 'Compress Image & Reduce Size';
         } else if (fileCount > 1) {
@@ -1550,7 +1627,7 @@ class ImageCompressor {
         } else {
             compressBtnText.textContent = 'Compress Image & Reduce Size';
         }
-        
+
         compressBtn.innerHTML = `<i class="fas fa-compress-alt"></i> <span id="compressBtnText">${compressBtnText.textContent}</span>`;
         compressBtn.disabled = false;
     }
@@ -1574,9 +1651,9 @@ class ImageCompressor {
                 animation: slideIn 0.3s ease;
             `;
             errorDiv.textContent = message;
-            
+
             document.body.appendChild(errorDiv);
-            
+
             // Remove after 5 seconds using idle callback
             const removeError = () => {
                 errorDiv.style.animation = 'slideOut 0.3s ease';
@@ -1586,7 +1663,7 @@ class ImageCompressor {
                     }
                 }, 300);
             };
-            
+
             if (typeof window.requestIdleCallback !== 'undefined') {
                 window.requestIdleCallback(() => {
                     setTimeout(removeError, 5000);
@@ -1606,15 +1683,15 @@ class ImageCompressor {
             this.setupFAQ();
         }
     }
-    
+
     setupFAQ() {
         const faqQuestions = document.querySelectorAll('.faq-question');
-        
+
         if (faqQuestions.length === 0) {
             setTimeout(() => this.setupFAQ(), 500);
             return;
         }
-        
+
         faqQuestions.forEach((question) => {
             const q = question;
 

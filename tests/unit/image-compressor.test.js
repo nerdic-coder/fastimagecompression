@@ -34,7 +34,7 @@ describe('ImageCompressor', () => {
 
   test('should initialize with default values', () => {
     const compressor = new ImageCompressor();
-    
+
     expect(compressor.originalFile).toBeNull();
     expect(compressor.originalFiles).toEqual([]);
     expect(compressor.isProcessing).toBe(false);
@@ -43,7 +43,7 @@ describe('ImageCompressor', () => {
 
   test('should format file size correctly', () => {
     const compressor = new ImageCompressor();
-    
+
     expect(compressor.formatFileSize(0)).toBe('0 Bytes');
     expect(compressor.formatFileSize(1024)).toBe('1 KB');
     expect(compressor.formatFileSize(1048576)).toBe('1 MB');
@@ -54,7 +54,7 @@ describe('ImageCompressor', () => {
     const compressor = new ImageCompressor();
     const dataUrl = 'data:image/jpeg;base64,' + 'a'.repeat(100);
     const size = compressor.getDataUrlSize(dataUrl);
-    
+
     expect(size).toBeGreaterThan(0);
     expect(typeof size).toBe('number');
   });
@@ -63,32 +63,32 @@ describe('ImageCompressor', () => {
     const compressor = new ImageCompressor();
     compressor.originalFile = { name: 'test-image.jpg' };
     compressor.elements = { formatSelect: { value: 'jpeg' }, qualitySlider: { value: '80' } };
-    
+
     const fileName = compressor.generateFileName();
     expect(fileName).toBe('test-image_compressed_80%.jpeg');
   });
 
   test('should detect Safari iOS correctly', () => {
     const compressor = new ImageCompressor();
-    
+
     // Mock Safari iOS user agent
     Object.defineProperty(navigator, 'userAgent', {
       value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
       configurable: true
     });
-    
+
     compressor.detectSafariAndApplyFixes();
     expect(compressor.isSafariIOS).toBe(true);
   });
 
   test('should handle file validation correctly', () => {
     const compressor = new ImageCompressor();
-    
+
     const validFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     const invalidFile = new File(['test'], 'test.txt', { type: 'text/plain' });
     const largeFile = new File(['test'], 'large.jpg', { type: 'image/jpeg' });
     largeFile.size = 11 * 1024 * 1024; // 11MB
-    
+
     expect(compressor.isValidImageFile(validFile)).toBe(true);
     expect(compressor.isValidImageFile(invalidFile)).toBe(false);
     expect(compressor.isValidImageFile(largeFile)).toBe(false);
@@ -165,5 +165,28 @@ describe('ImageCompressor', () => {
 
     const fileName = compressor.generateFileName('data:image/jpeg;base64,abc');
     expect(fileName).toBe('test-image_compressed_80%.jpeg');
+  });
+
+  test('should preserve aspect ratio without upscaling', () => {
+    const compressor = new ImageCompressor();
+    expect(compressor.getOutputDimensions(4000, 2000, 1920)).toEqual({ width: 1920, height: 960 });
+    expect(compressor.getOutputDimensions(800, 400, 1920)).toEqual({ width: 800, height: 400 });
+  });
+
+  test('should expose target-size and metadata defaults', () => {
+    const compressor = new ImageCompressor();
+    compressor.elements = {
+      targetSizeKb: { value: '200' },
+      maxDimension: { value: '1200' },
+      removeMetadata: { checked: true }
+    };
+    expect(compressor.getCompressionOptions()).toEqual({ maxDimension: 1200, targetSizeKb: 200, removeMetadata: true });
+  });
+
+  test('should generate unique ZIP names for duplicate source names', () => {
+    const compressor = new ImageCompressor();
+    compressor.elements = { formatSelect: { value: 'jpeg' }, qualitySlider: { value: '70' } };
+    const name = compressor.uniqueBatchFileName({ originalFile: { name: 'photo.jpg' }, compressedDataUrl: 'data:image/jpeg;base64,abc' }, 1);
+    expect(name).toBe('002_photo_compressed_70%.jpeg');
   });
 });
