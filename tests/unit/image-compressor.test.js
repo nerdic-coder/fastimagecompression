@@ -158,6 +158,20 @@ describe('ImageCompressor', () => {
     expect(formatSelect.querySelector('option[value="avif"]').disabled).toBe(true);
   });
 
+  test('should preserve preview scale while moving the comparison handle', () => {
+    const compressor = new ImageCompressor();
+    const comparisonPanel = document.createElement('div');
+    comparisonPanel.innerHTML = '<div class="comparison-after"><img alt="compressed"></div>';
+    compressor.elements = { comparisonPanel };
+
+    compressor.updateComparisonPosition(25);
+
+    const after = comparisonPanel.querySelector('.comparison-after');
+    const afterImage = after.querySelector('img');
+    expect(after.style.width).toBe('25%');
+    expect(afterImage.style.width).toBe('400%');
+  });
+
   test('should use data URL mime type for output file extension', () => {
     const compressor = new ImageCompressor();
     compressor.originalFile = { name: 'test-image.jpg' };

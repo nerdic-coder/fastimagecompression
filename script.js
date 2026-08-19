@@ -1135,7 +1135,18 @@ class ImageCompressor {
 
     updateComparisonPosition(value) {
         const after = this.elements?.comparisonPanel?.querySelector('.comparison-after');
-        if (after) after.style.width = `${value}%`;
+        if (!after) return;
+
+        const position = Math.max(0, Math.min(100, Number(value) || 0));
+        after.style.width = `${position}%`;
+
+        // The clipped layer must keep the same scale as the full-width image.
+        // At 25%, for example, its image needs to be 400% of the clipped layer;
+        // otherwise moving the handle left makes the preview itself shrink.
+        const afterImage = after.querySelector('img');
+        if (afterImage) {
+            afterImage.style.width = position > 0 ? `${10000 / position}%` : '100%';
+        }
     }
 
     updateComparison(originalUrl, compressedUrl) {
