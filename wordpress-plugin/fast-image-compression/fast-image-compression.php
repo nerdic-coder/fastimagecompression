@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fast Image Compression
  * Description: Optimize WordPress Media Library images with quality and format controls (MVP).
- * Version: 0.1.0
+ * Version: 0.1.1
  * Author: Nerdic Coder
  * License: GPL-2.0-or-later
  */
@@ -290,7 +290,10 @@ final class FIC_Plugin {
         $settings = $this->get_settings();
 
         if (!empty($_POST['format'])) {
-            $settings['format'] = sanitize_text_field($_POST['format']);
+            $format = sanitize_key(wp_unslash($_POST['format']));
+            if (in_array($format, ['jpeg', 'webp', 'avif'], true)) {
+                $settings['format'] = $format;
+            }
         }
         if (!empty($_POST['quality'])) {
             $settings['quality'] = max(1, min(100, intval($_POST['quality'])));
@@ -318,6 +321,15 @@ final class FIC_Plugin {
     }
 
     private function optimize_attachment($attachment_id, $settings) {
+        $attachment = get_post($attachment_id);
+        if (!$attachment || 'attachment' !== $attachment->post_type || !wp_attachment_is_image($attachment_id)) {
+            return ['success' => false, 'saved_bytes' => 0, 'message' => 'Invalid image attachment.'];
+        }
+
+        if (!current_user_can('edit_post', $attachment_id)) {
+            return ['success' => false, 'saved_bytes' => 0, 'message' => 'You are not allowed to edit this attachment.'];
+        }
+
         $file = get_attached_file($attachment_id);
         if (!$file || !file_exists($file)) {
             return ['success' => false, 'saved_bytes' => 0, 'message' => 'Attachment file not found.'];
@@ -328,10 +340,23 @@ final class FIC_Plugin {
         $caps = $this->detect_capabilities();
 
         if (!$caps['formats'][$format]) {
-            $format = 'jpeg';
+            return ['success' => false, 'saved_bytes' => 0, 'message' => strtoupper($format) . ' output is not supported by this WordPress image backend.'];
         }
 
         $target_mime = $this->format_to_mime($format);
+        $target_extension = $this->format_to_extension($format);
+        $source_format = $this->extension_to_format(pathinfo($file, PATHINFO_EXTENSION));
+        $target_file = $file;
+
+        // A converted image must have a matching extension. Saving WebP/AVIF bytes
+        // into a .jpg path causes incorrect MIME handling and broken thumbnails.
+        if ($source_format !== $format) {
+            $target_name = wp_unique_filename(
+                dirname($file),
+                pathinfo($file, PATHINFO_FILENAME) . '.' . $target_extension
+            );
+            $target_file = trailingslashit(dirname($file)) . $target_name;
+        }
 
         $editor = wp_get_image_editor($file);
         if (is_wp_error($editor)) {
@@ -343,23 +368,44 @@ final class FIC_Plugin {
         if (!empty($settings['keep_originals'])) {
             $backup = $file . '.fic-orig';
             if (!file_exists($backup)) {
-                copy($file, $backup);
+                if (!copy($file, $backup)) {
+                    return ['success' => false, 'saved_bytes' => 0, 'message' => 'Could not create the original backup.'];
+                }
             }
         }
 
-        $save_result = $editor->save($file, $target_mime);
+        $strip_metadata = empty($settings['retain_metadata']);
+        $strip_metadata_filter = static function ($strip) use ($strip_metadata) {
+            return $strip_metadata;
+        };
+        add_filter('image_strip_meta', $strip_metadata_filter);
+        $save_result = $editor->save($target_file, $target_mime);
+        remove_filter('image_strip_meta', $strip_metadata_filter);
         if (is_wp_error($save_result)) {
             return ['success' => false, 'saved_bytes' => 0, 'message' => 'Failed to save optimized image: ' . $save_result->get_error_message()];
         }
 
         clearstatcache(true, $file);
-        $after = file_exists($file) ? filesize($file) : $before;
+        clearstatcache(true, $target_file);
+        $after = file_exists($target_file) ? filesize($target_file) : $before;
         $saved = max(0, $before - $after);
 
-        // Keep attachment metadata aligned in case dimensions changed.
-        $metadata = wp_generate_attachment_metadata($attachment_id, $file);
+        if ($target_file !== $file) {
+            update_attached_file($attachment_id, $target_file);
+            wp_update_post([
+                'ID' => $attachment_id,
+                'post_mime_type' => $target_mime,
+            ]);
+        }
+
+        // Keep attachment metadata aligned in case dimensions or format changed.
+        $metadata = wp_generate_attachment_metadata($attachment_id, $target_file);
         if (!is_wp_error($metadata) && !empty($metadata)) {
             wp_update_attachment_metadata($attachment_id, $metadata);
+        }
+
+        if ($target_file !== $file && empty($settings['keep_originals']) && file_exists($file)) {
+            wp_delete_file($file);
         }
 
         return ['success' => true, 'saved_bytes' => $saved, 'message' => ''];
@@ -375,6 +421,34 @@ final class FIC_Plugin {
             default:
                 return 'image/jpeg';
         }
+    }
+
+    private function format_to_extension($format) {
+        switch ($format) {
+            case 'webp':
+                return 'webp';
+            case 'avif':
+                return 'avif';
+            case 'jpeg':
+            default:
+                return 'jpg';
+        }
+    }
+
+    private function extension_to_format($extension) {
+        $extension = strtolower((string) $extension);
+
+        if (in_array($extension, ['jpg', 'jpeg'], true)) {
+            return 'jpeg';
+        }
+        if ('webp' === $extension) {
+            return 'webp';
+        }
+        if ('avif' === $extension) {
+            return 'avif';
+        }
+
+        return 'other';
     }
 
     private function detect_capabilities() {

@@ -17,7 +17,7 @@ This folder contains an MVP WordPress plugin implementation for Fast Image Compr
 - Single-image optimize action in Media Library row actions
 - Batch optimize page for selected images (with per-action overrides)
 - Before/after savings shown in admin notices
-- Codec/backend capability detection with fallback to JPEG when unsupported
+- Codec/backend capability detection with clear errors when an explicitly selected format is unsupported
 
 ## Install (manual)
 
@@ -27,6 +27,8 @@ This folder contains an MVP WordPress plugin implementation for Fast Image Compr
 
 ## Notes
 
-- Current MVP optimizes the original attachment file in-place.
-- If **Keep originals** is enabled, backup files are created as `filename.ext.fic-orig`.
-- Metadata retention is marked as best effort due to backend differences (GD/Imagick and host setup).
+- Same-format optimization updates the original attachment in-place.
+- Format conversion creates a correctly named attachment file (for example, `.jpg` → `.webp`) and updates WordPress attachment metadata.
+- If **Keep originals** is enabled, the source file is backed up as `filename.ext.fic-orig`; optimization stops if that backup cannot be created.
+- Metadata retention is best effort due to backend differences (GD/Imagick and host setup), and is applied through WordPress's `image_strip_meta` filter.
+- Optimization requires both `upload_files` and attachment-level `edit_post` permission.
