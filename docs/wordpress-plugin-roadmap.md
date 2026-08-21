@@ -13,7 +13,7 @@ This document defines an implementation path for a WordPress plugin version of F
 3. Selected-images batch optimize action
 4. Before/after stats in admin UI
 5. Codec capability checks (GD/Imagick, WebP/AVIF support)
-6. Graceful fallback + user messaging when codec unsupported
+6. Graceful failure + user messaging when codec unsupported
 
 ## Architecture options
 ### Option A: Server-side only (WordPress-native)
