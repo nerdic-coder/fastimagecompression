@@ -17,6 +17,7 @@ final class FIC_Plugin {
     const NONCE_ACTION_SINGLE = 'fic_optimize_attachment';
     const NONCE_ACTION_BATCH = 'fic_batch_optimize';
     private static $auto_optimizing_upload = false;
+    private static $capabilities = null;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'register_admin_pages']);
@@ -462,7 +463,10 @@ final class FIC_Plugin {
 
         $editor->set_quality(max(1, min(100, intval($settings['quality']))));
 
-        if (!empty($settings['keep_originals'])) {
+        // When converting formats, the source file remains untouched because
+        // the optimized image is written to a separate path. A backup is only
+        // needed when optimization will replace the source file in-place.
+        if (!empty($settings['keep_originals']) && $target_file === $file) {
             $backup = $file . '.fic-orig';
             if (!file_exists($backup)) {
                 if (!copy($file, $backup)) {
@@ -551,27 +555,30 @@ final class FIC_Plugin {
     }
 
     private function detect_capabilities() {
+        if (is_array(self::$capabilities)) {
+            return self::$capabilities;
+        }
+
         $backend = class_exists('Imagick') ? 'Imagick (preferred)' : 'GD (fallback)';
 
         $imagetype_flags = function_exists('imagetypes') ? imagetypes() : 0;
         $gd_webp = (defined('IMG_WEBP') && ($imagetype_flags & IMG_WEBP));
         $gd_avif = (defined('IMG_AVIF') && ($imagetype_flags & IMG_AVIF));
 
-        $imagick_formats = [];
-        if (class_exists('Imagick')) {
-            try {
-                $imagick = new Imagick();
-                $imagick_formats = array_map('strtoupper', $imagick->queryFormats());
-            } catch (Exception $e) {
-                $imagick_formats = [];
+        $imagick_supports = function($format) {
+            if (!function_exists('wp_image_editor_supports')) {
+                return false;
             }
-        }
 
-        $imagick_supports = function($format) use ($imagick_formats) {
-            return in_array(strtoupper($format), $imagick_formats, true);
+            $mime_type = $this->format_to_mime(strtolower($format));
+            try {
+                return wp_image_editor_supports(['mime_type' => $mime_type]);
+            } catch (Throwable $e) {
+                return false;
+            }
         };
 
-        return [
+        self::$capabilities = [
             'backend' => $backend,
             'formats' => [
                 'jpeg' => true,
@@ -579,6 +586,8 @@ final class FIC_Plugin {
                 'avif' => $gd_avif || $imagick_supports('AVIF'),
             ],
         ];
+
+        return self::$capabilities;
     }
 
     private function redirect_with_notice($type, $message, $path = 'upload.php?page=fic-settings') {
