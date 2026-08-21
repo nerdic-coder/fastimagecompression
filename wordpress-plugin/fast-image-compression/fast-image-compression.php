@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fast Image Compression
  * Description: Optimize WordPress Media Library images with quality and format controls (MVP).
- * Version: 0.1.1
+ * Version: 0.2.0
  * Author: Nerdic Coder
  * License: GPL-2.0-or-later
  */
@@ -13,12 +13,15 @@ if (!defined('ABSPATH')) {
 
 final class FIC_Plugin {
     const OPTION_KEY = 'fic_settings';
+    const OPTIMIZATION_META_KEY = '_fic_optimization_signature';
     const NONCE_ACTION_SINGLE = 'fic_optimize_attachment';
     const NONCE_ACTION_BATCH = 'fic_batch_optimize';
+    private static $auto_optimizing_upload = false;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'register_admin_pages']);
         add_action('admin_init', [$this, 'register_settings']);
+        add_filter('wp_generate_attachment_metadata', [$this, 'maybe_optimize_uploaded_image'], 20, 2);
         add_filter('media_row_actions', [$this, 'add_media_row_action'], 10, 2);
         add_action('admin_post_fic_optimize_attachment', [$this, 'handle_single_optimize']);
         add_action('admin_post_fic_batch_optimize', [$this, 'handle_batch_optimize']);
@@ -54,6 +57,7 @@ final class FIC_Plugin {
         add_settings_field('quality', 'Default quality (1-100)', [$this, 'render_field_quality'], 'fic-settings', 'fic_general');
         add_settings_field('keep_originals', 'Keep originals by default', [$this, 'render_field_keep_originals'], 'fic-settings', 'fic_general');
         add_settings_field('retain_metadata', 'Retain metadata (best effort)', [$this, 'render_field_retain_metadata'], 'fic-settings', 'fic_general');
+        add_settings_field('auto_optimize_uploads', 'Optimize uploads automatically', [$this, 'render_field_auto_optimize_uploads'], 'fic-settings', 'fic_general');
     }
 
     public function sanitize_settings($input) {
@@ -75,6 +79,7 @@ final class FIC_Plugin {
             'quality' => $quality,
             'keep_originals' => !empty($input['keep_originals']) ? 1 : 0,
             'retain_metadata' => !empty($input['retain_metadata']) ? 1 : 0,
+            'auto_optimize_uploads' => !empty($input['auto_optimize_uploads']) ? 1 : 0,
         ];
     }
 
@@ -84,6 +89,7 @@ final class FIC_Plugin {
             'quality' => 82,
             'keep_originals' => 1,
             'retain_metadata' => 0,
+            'auto_optimize_uploads' => 0,
         ];
 
         $saved = get_option(self::OPTION_KEY, []);
@@ -135,6 +141,17 @@ final class FIC_Plugin {
         <?php
     }
 
+    public function render_field_auto_optimize_uploads() {
+        $settings = $this->get_settings();
+        ?>
+        <label>
+            <input type="checkbox" name="<?php echo esc_attr(self::OPTION_KEY); ?>[auto_optimize_uploads]" value="1" <?php checked(1, intval($settings['auto_optimize_uploads'])); ?> />
+            Optimize newly uploaded images using the settings above
+        </label>
+        <p class="description">Disabled by default. Existing images are not changed when this setting is enabled.</p>
+        <?php
+    }
+
     public function render_settings_page() {
         if (!current_user_can('upload_files')) {
             return;
@@ -168,6 +185,7 @@ final class FIC_Plugin {
         }
 
         $settings = $this->get_settings();
+        $signature = $this->optimization_signature($settings);
         $items = get_posts([
             'post_type' => 'attachment',
             'post_mime_type' => 'image',
@@ -175,12 +193,24 @@ final class FIC_Plugin {
             'posts_per_page' => 30,
             'orderby' => 'date',
             'order' => 'DESC',
+            'meta_query' => [
+                'relation' => 'OR',
+                [
+                    'key' => self::OPTIMIZATION_META_KEY,
+                    'compare' => 'NOT EXISTS',
+                ],
+                [
+                    'key' => self::OPTIMIZATION_META_KEY,
+                    'value' => $signature,
+                    'compare' => '!=',
+                ],
+            ],
         ]);
 
         ?>
         <div class="wrap">
             <h1>Batch Optimize Images</h1>
-            <p>Select images and run optimization using defaults or one-time overrides.</p>
+            <p>Select images that have not been optimized with the current defaults. One-time overrides are available below.</p>
 
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="fic_batch_optimize" />
@@ -213,15 +243,21 @@ final class FIC_Plugin {
                     </tr>
                 </table>
 
-                <h2>Recent images</h2>
+                <h2>Images needing optimization</h2>
                 <?php if (empty($items)) : ?>
-                    <p>No images found.</p>
+                    <p>No images need optimization with the current defaults.</p>
                 <?php else : ?>
+                    <p>
+                        <label>
+                            <input type="checkbox" id="fic-select-all" />
+                            Select all visible images
+                        </label>
+                    </p>
                     <ul>
                         <?php foreach ($items as $item) : ?>
                             <li>
                                 <label>
-                                    <input type="checkbox" name="attachment_ids[]" value="<?php echo intval($item->ID); ?>" />
+                                    <input type="checkbox" class="fic-attachment-checkbox" name="attachment_ids[]" value="<?php echo intval($item->ID); ?>" />
                                     <?php echo esc_html($item->post_title . ' (#' . $item->ID . ')'); ?>
                                 </label>
                             </li>
@@ -231,6 +267,29 @@ final class FIC_Plugin {
                 <?php endif; ?>
             </form>
         </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('fic-select-all');
+            if (!selectAll) {
+                return;
+            }
+
+            const checkboxes = Array.from(document.querySelectorAll('.fic-attachment-checkbox'));
+            const updateSelectAllState = function () {
+                const selected = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+                selectAll.checked = checkboxes.length > 0 && selected === checkboxes.length;
+                selectAll.indeterminate = selected > 0 && selected < checkboxes.length;
+            };
+
+            selectAll.addEventListener('change', function () {
+                checkboxes.forEach(function (checkbox) { checkbox.checked = selectAll.checked; });
+                selectAll.indeterminate = false;
+            });
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', updateSelectAllState);
+            });
+        });
+        </script>
         <?php
     }
 
@@ -320,6 +379,44 @@ final class FIC_Plugin {
         $this->redirect_with_notice($failed > 0 ? 'warning' : 'success', $msg, 'upload.php?page=fic-batch-optimize');
     }
 
+    public function maybe_optimize_uploaded_image($metadata, $attachment_id) {
+        $settings = $this->get_settings();
+
+        // Only act during the initial upload metadata generation. The guard also
+        // prevents recursion when optimize_attachment regenerates metadata.
+        if (empty($settings['auto_optimize_uploads'])
+            || self::$auto_optimizing_upload
+            || !empty(get_post_meta($attachment_id, '_wp_attachment_metadata', true))
+            || !wp_attachment_is_image($attachment_id)
+        ) {
+            return $metadata;
+        }
+
+        self::$auto_optimizing_upload = true;
+        try {
+            $result = $this->optimize_attachment($attachment_id, $settings);
+            if ($result['success']) {
+                $optimized_metadata = wp_get_attachment_metadata($attachment_id);
+                if (is_array($optimized_metadata) && !empty($optimized_metadata)) {
+                    return $optimized_metadata;
+                }
+            }
+        } finally {
+            self::$auto_optimizing_upload = false;
+        }
+
+        return $metadata;
+    }
+
+    private function optimization_signature($settings) {
+        return md5(wp_json_encode([
+            'format' => $settings['format'],
+            'quality' => intval($settings['quality']),
+            'keep_originals' => !empty($settings['keep_originals']) ? 1 : 0,
+            'retain_metadata' => !empty($settings['retain_metadata']) ? 1 : 0,
+        ]));
+    }
+
     private function optimize_attachment($attachment_id, $settings) {
         $attachment = get_post($attachment_id);
         if (!$attachment || 'attachment' !== $attachment->post_type || !wp_attachment_is_image($attachment_id)) {
@@ -403,6 +500,8 @@ final class FIC_Plugin {
         if (!is_wp_error($metadata) && !empty($metadata)) {
             wp_update_attachment_metadata($attachment_id, $metadata);
         }
+
+        update_post_meta($attachment_id, self::OPTIMIZATION_META_KEY, $this->optimization_signature($settings));
 
         if ($target_file !== $file && empty($settings['keep_originals']) && file_exists($file)) {
             wp_delete_file($file);
