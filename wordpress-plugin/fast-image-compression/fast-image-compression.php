@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fast Image Compression
  * Description: Optimize WordPress Media Library images with quality and format controls (MVP).
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Nerdic Coder
  * License: GPL-2.0-or-later
  */
@@ -62,13 +62,8 @@ final class FIC_Plugin {
     }
 
     public function sanitize_settings($input) {
-        $caps = $this->detect_capabilities();
-
         $format = isset($input['format']) ? sanitize_text_field($input['format']) : 'jpeg';
         if (!in_array($format, ['jpeg', 'webp', 'avif'], true)) {
-            $format = 'jpeg';
-        }
-        if (!$caps['formats'][$format]) {
             $format = 'jpeg';
         }
 
@@ -103,12 +98,11 @@ final class FIC_Plugin {
 
     public function render_field_format() {
         $settings = $this->get_settings();
-        $caps = $this->detect_capabilities();
         ?>
         <select name="<?php echo esc_attr(self::OPTION_KEY); ?>[format]">
             <?php foreach (['jpeg' => 'JPEG', 'webp' => 'WebP', 'avif' => 'AVIF'] as $key => $label) : ?>
-                <option value="<?php echo esc_attr($key); ?>" <?php selected($settings['format'], $key); ?> <?php disabled(!$caps['formats'][$key]); ?>>
-                    <?php echo esc_html($label . (!$caps['formats'][$key] ? ' (unsupported)' : '')); ?>
+                <option value="<?php echo esc_attr($key); ?>" <?php selected($settings['format'], $key); ?>>
+                    <?php echo esc_html($label); ?>
                 </option>
             <?php endforeach; ?>
         </select>
@@ -158,17 +152,10 @@ final class FIC_Plugin {
             return;
         }
 
-        $caps = $this->detect_capabilities();
         ?>
         <div class="wrap">
             <h1>Fast Image Compression</h1>
-            <p><strong>Backend:</strong> <?php echo esc_html($caps['backend']); ?></p>
-            <p>
-                <strong>Format support:</strong>
-                JPEG: <?php echo $caps['formats']['jpeg'] ? '✅' : '❌'; ?>,
-                WebP: <?php echo $caps['formats']['webp'] ? '✅' : '❌'; ?>,
-                AVIF: <?php echo $caps['formats']['avif'] ? '✅' : '❌'; ?>
-            </p>
+            <p>Format support is checked when an image is optimized so this page remains compatible with lightweight WordPress runtimes such as Playground.</p>
             <form method="post" action="options.php">
                 <?php
                 settings_fields(self::OPTION_KEY);
