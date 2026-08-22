@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fast Image Compression
  * Description: Optimize WordPress Media Library images with quality and format controls (MVP).
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Nerdic Coder
  * License: GPL-2.0-or-later
  */
@@ -17,11 +17,13 @@ final class FIC_Plugin {
     const NONCE_ACTION_SINGLE = 'fic_optimize_attachment';
     const NONCE_ACTION_BATCH = 'fic_batch_optimize';
     private static $auto_optimizing_upload = false;
+    private static $new_attachment_ids = [];
     private static $capabilities = null;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'register_admin_pages']);
         add_action('admin_init', [$this, 'register_settings']);
+        add_action('add_attachment', [$this, 'remember_new_attachment'], 10, 1);
         add_filter('wp_generate_attachment_metadata', [$this, 'maybe_optimize_uploaded_image'], 20, 2);
         add_filter('media_row_actions', [$this, 'add_media_row_action'], 10, 2);
         add_action('admin_post_fic_optimize_attachment', [$this, 'handle_single_optimize']);
@@ -145,6 +147,10 @@ final class FIC_Plugin {
         </label>
         <p class="description">Disabled by default. Existing images are not changed when this setting is enabled.</p>
         <?php
+    }
+
+    public function remember_new_attachment($attachment_id) {
+        self::$new_attachment_ids[(int) $attachment_id] = true;
     }
 
     public function render_settings_page() {
@@ -374,12 +380,15 @@ final class FIC_Plugin {
         // prevents recursion when optimize_attachment regenerates metadata.
         if (empty($settings['auto_optimize_uploads'])
             || self::$auto_optimizing_upload
-            || !empty(get_post_meta($attachment_id, '_wp_attachment_metadata', true))
+            || empty(self::$new_attachment_ids[(int) $attachment_id])
             || !wp_attachment_is_image($attachment_id)
         ) {
             return $metadata;
         }
 
+        // Consume this marker before optimizing. The nested metadata generation
+        // performed by optimize_attachment must not trigger a second conversion.
+        unset(self::$new_attachment_ids[(int) $attachment_id]);
         self::$auto_optimizing_upload = true;
         try {
             $result = $this->optimize_attachment($attachment_id, $settings);
