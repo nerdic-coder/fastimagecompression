@@ -59,6 +59,20 @@ describe('ImageCompressor', () => {
     expect(typeof size).toBe('number');
   });
 
+  test('should recommend JPEG for an opaque PNG after alpha detection', () => {
+    const compressor = new ImageCompressor();
+    compressor.hasTransparency = false;
+
+    expect(compressor.getRecommendedFormat({ type: 'image/png', name: 'opaque.png' })).toBe('jpeg');
+  });
+
+  test('should recommend PNG for a transparent PNG after alpha detection', () => {
+    const compressor = new ImageCompressor();
+    compressor.hasTransparency = true;
+
+    expect(compressor.getRecommendedFormat({ type: 'image/png', name: 'transparent.png' })).toBe('png');
+  });
+
   test('should generate correct file names', () => {
     const compressor = new ImageCompressor();
     compressor.originalFile = { name: 'test-image.jpg' };

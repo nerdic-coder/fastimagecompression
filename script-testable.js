@@ -264,9 +264,9 @@ class ImageCompressor {
         const originalType = originalFile.type.toLowerCase();
         const fileName = originalFile.name.toLowerCase();
 
-        // Preserve PNG transparency by default.
+        // Preserve PNG transparency by default when alpha detection is unavailable.
         if (originalType.includes('png') || fileName.endsWith('.png')) {
-            return 'png';
+            return this.hasTransparency === false ? 'jpeg' : 'png';
         }
 
         // If original is WebP, keep as WebP (if supported)
@@ -276,6 +276,28 @@ class ImageCompressor {
 
         // For JPEG and other opaque formats, recommend JPEG for best compression.
         return 'jpeg';
+    }
+
+    detectImageTransparency(image) {
+        if (!image || typeof document?.createElement !== 'function') return null;
+
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth || image.width;
+            canvas.height = image.naturalHeight || image.height;
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            if (!context || !canvas.width || !canvas.height) return null;
+
+            context.drawImage(image, 0, 0);
+            const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            for (let index = 3; index < pixels.length; index += 4) {
+                if (pixels[index] < 255) return true;
+            }
+            return false;
+        } catch (error) {
+            console.warn('Unable to detect image transparency; preserving PNG output.', error);
+            return null;
+        }
     }
 
     isUnsupportedGif(file) {
@@ -725,7 +747,6 @@ class ImageCompressor {
             // Single file - use existing single file flow
             console.log('Processing single file:', validFiles[0].name);
             this.originalFile = validFiles[0];
-            this.updateFormatRecommendation(); // Update format recommendation
             this.processSingleFile(validFiles[0]);
         } else {
             // Multiple files - use batch processing flow
@@ -749,6 +770,8 @@ class ImageCompressor {
         img.onload = () => {
             console.log('Image loaded successfully:', file.name);
             this.originalImage = img;
+            this.hasTransparency = this.detectImageTransparency(img);
+            this.updateFormatRecommendation();
             this.updateImageStatus(0, 'ready');
             this.displayOriginalImage();
             this.resetCompressButton();
