@@ -17,7 +17,7 @@ class ImageCompressor {
             errors: 0
         };
         this.usesNativeFileInput = false;
-        this.supportedOutputFormats = { jpeg: true, webp: true, avif: false };
+        this.supportedOutputFormats = { jpeg: true, png: true, webp: true, avif: false };
 
         // Defer heavy initialization with Safari iOS compatibility
         if (typeof requestIdleCallback !== 'undefined') {
@@ -197,7 +197,7 @@ class ImageCompressor {
     }
 
     detectSupportedOutputFormats() {
-        const support = { jpeg: true, webp: false, avif: false };
+        const support = { jpeg: true, png: true, webp: false, avif: false };
 
         if (!this.canvas || typeof this.canvas.toDataURL !== 'function') {
             this.supportedOutputFormats = support;
@@ -225,8 +225,8 @@ class ImageCompressor {
         const { formatSelect } = this.elements;
         if (!formatSelect || typeof formatSelect.querySelector !== 'function') return;
 
-        const labels = { jpeg: 'JPEG', webp: 'WebP', avif: 'AVIF' };
-        ['jpeg', 'webp', 'avif'].forEach((format) => {
+        const labels = { jpeg: 'JPEG', png: 'PNG', webp: 'WebP', avif: 'AVIF' };
+        ['jpeg', 'png', 'webp', 'avif'].forEach((format) => {
             let option = formatSelect.querySelector(`option[value="${format}"]`);
             if (!option) {
                 option = document.createElement('option');
@@ -264,13 +264,62 @@ class ImageCompressor {
         const originalType = originalFile.type.toLowerCase();
         const fileName = originalFile.name.toLowerCase();
 
+        // Preserve PNG transparency by default when alpha detection is unavailable.
+        if (originalType.includes('png') || fileName.endsWith('.png')) {
+            return this.hasTransparency === false ? 'jpeg' : 'png';
+        }
+
         // If original is WebP, keep as WebP (if supported)
         if (originalType.includes('webp') || fileName.endsWith('.webp')) {
             return 'webp';
         }
 
-        // For all other formats (JPEG, PNG, GIF, etc.), recommend JPEG for best compression
+        // For JPEG and other opaque formats, recommend JPEG for best compression.
         return 'jpeg';
+    }
+
+    detectImageTransparency(image) {
+        if (!image || typeof document?.createElement !== 'function') return null;
+
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.naturalWidth || image.width;
+            canvas.height = image.naturalHeight || image.height;
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            if (!context || !canvas.width || !canvas.height) return null;
+
+            context.drawImage(image, 0, 0);
+            const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            for (let index = 3; index < pixels.length; index += 4) {
+                if (pixels[index] < 255) return true;
+            }
+            return false;
+        } catch (error) {
+            console.warn('Unable to detect image transparency; preserving PNG output.', error);
+            return null;
+        }
+    }
+
+    isUnsupportedGif(file) {
+        if (!file) return false;
+        const type = (file.type || '').toLowerCase();
+        const name = (file.name || '').toLowerCase();
+        return type === 'image/gif' || name.endsWith('.gif');
+    }
+
+    resetBatchProgress(total = this.originalFiles.length) {
+        this.batchProgress = { current: 0, total, completed: 0, errors: 0 };
+    }
+
+    formatBatchSizeChange(originalSize, compressedSize) {
+        if (!originalSize || compressedSize <= originalSize) {
+            const bytes = originalSize - compressedSize;
+            const reduction = originalSize ? (bytes / originalSize) * 100 : 0;
+            return `${reduction.toFixed(1)}% (${this.formatFileSize(Math.max(0, bytes))})`;
+        }
+
+        const increase = ((compressedSize - originalSize) / originalSize) * 100;
+        return `File size increased by ${increase.toFixed(1)}% (${this.formatFileSize(compressedSize - originalSize)})`;
     }
 
     updateFormatRecommendation() {
@@ -660,6 +709,10 @@ class ImageCompressor {
 
         // Filter valid image files
         const validFiles = files.filter(file => {
+            if (this.isUnsupportedGif(file)) {
+                this.showError(`Skipping ${file.name}: GIF input is not supported because conversion would remove animation.`);
+                return false;
+            }
             const hasImageMimeType = file.type && file.type.startsWith('image/');
             const hasImageExtension = file.name ? /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(file.name) : false;
 
@@ -694,7 +747,6 @@ class ImageCompressor {
             // Single file - use existing single file flow
             console.log('Processing single file:', validFiles[0].name);
             this.originalFile = validFiles[0];
-            this.updateFormatRecommendation(); // Update format recommendation
             this.processSingleFile(validFiles[0]);
         } else {
             // Multiple files - use batch processing flow
@@ -718,6 +770,8 @@ class ImageCompressor {
         img.onload = () => {
             console.log('Image loaded successfully:', file.name);
             this.originalImage = img;
+            this.hasTransparency = this.detectImageTransparency(img);
+            this.updateFormatRecommendation();
             this.updateImageStatus(0, 'ready');
             this.displayOriginalImage();
             this.resetCompressButton();
@@ -1001,6 +1055,7 @@ class ImageCompressor {
             const options = this.getCompressionOptions();
 
             this.compressedImages = [];
+            this.resetBatchProgress(this.originalFiles.length);
 
             // Process images sequentially to avoid overwhelming the browser
             for (let i = 0; i < this.originalFiles.length; i++) {
@@ -1188,6 +1243,7 @@ class ImageCompressor {
             const safeFormat = this.resolveOutputFormat(format);
             const mimeTypes = {
                 'jpeg': 'image/jpeg',
+                'png': 'image/png',
                 'webp': 'image/webp',
                 'avif': 'image/avif'
             };
@@ -1421,7 +1477,9 @@ class ImageCompressor {
 
         // Update summary
         totalImages.textContent = this.compressedImages.length;
-        totalSizeReduction.textContent = `${totalReduction.toFixed(1)}% (${this.formatFileSize(totalOriginalSize - totalCompressedSize)})`;
+        totalSizeReduction.textContent = totalCompressedSize > totalOriginalSize
+            ? this.formatBatchSizeChange(totalOriginalSize, totalCompressedSize)
+            : `${totalReduction.toFixed(1)}% (${this.formatFileSize(totalOriginalSize - totalCompressedSize)})`;
         averageCompression.textContent = `${averageReduction.toFixed(1)}%`;
         if (batchLoadTimeEstimate) {
             batchLoadTimeEstimate.textContent = this.buildLoadTimeEstimate(totalOriginalSize, totalCompressedSize);
