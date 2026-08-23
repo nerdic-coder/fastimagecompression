@@ -203,4 +203,33 @@ describe('ImageCompressor', () => {
     const name = compressor.uniqueBatchFileName({ originalFile: { name: 'photo.jpg' }, compressedDataUrl: 'data:image/jpeg;base64,abc' }, 1);
     expect(name).toBe('002_photo_compressed_70%.jpeg');
   });
+
+  test('should recommend PNG for transparent PNG inputs', () => {
+    const compressor = new ImageCompressor();
+
+    expect(compressor.getRecommendedFormat({ name: 'logo.png', type: 'image/png' })).toBe('png');
+  });
+
+  test('should reset batch progress at the start of every run', () => {
+    const compressor = new ImageCompressor();
+    compressor.originalFiles = [{ name: 'a.jpg' }, { name: 'b.jpg' }];
+    compressor.batchProgress = { current: 2, total: 2, completed: 2, errors: 0 };
+
+    compressor.resetBatchProgress();
+
+    expect(compressor.batchProgress).toEqual({ current: 0, total: 2, completed: 0, errors: 0 });
+  });
+
+  test('should format batch size increases without invalid units', () => {
+    const compressor = new ImageCompressor();
+
+    expect(compressor.formatBatchSizeChange(1000, 1711)).toBe('File size increased by 71.1% (711 Bytes)');
+  });
+
+  test('should explicitly reject GIF inputs to avoid silently destroying animation', () => {
+    const compressor = new ImageCompressor();
+
+    expect(compressor.isUnsupportedGif({ name: 'animation.gif', type: 'image/gif' })).toBe(true);
+    expect(compressor.isUnsupportedGif({ name: 'photo.png', type: 'image/png' })).toBe(false);
+  });
 });

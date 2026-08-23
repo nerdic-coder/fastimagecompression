@@ -12,8 +12,8 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Online Image Compressor (JPEG, PNG, GIF, WebP) | Fast Image Compression</title>
-    <meta name="description" content="Private, local-first image compressor. Resize and compress JPEG, PNG, GIF, WebP, and AVIF images in your browser without uploading files.">
+    <title>Free Online Image Compressor (JPEG, PNG, WebP) | Fast Image Compression</title>
+    <meta name="description" content="Private, local-first image compressor. Resize and compress JPEG, PNG, WebP, and AVIF images in your browser without uploading files.">
     <meta name="author" content="Fast Image Compression">
     <link rel="canonical" href="https://fastimagecompression.com/">
 
@@ -31,7 +31,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fastimagecompression.com/">
     <meta property="og:title" content="Fast Image Compression | fastimagecompression.com">
-    <meta property="og:description" content="Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size, compress JPEG, PNG, GIF files with our photo compressor.">
+    <meta property="og:description" content="Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size across JPEG, PNG, and WebP formats.">
     <meta property="og:image" content="https://fastimagecompression.com/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -42,7 +42,7 @@
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://fastimagecompression.com/">
     <meta property="twitter:title" content="Fast Image Compression | fastimagecompression.com">
-    <meta property="twitter:description" content="Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size, compress JPEG, PNG, GIF files with our photo compressor.">
+    <meta property="twitter:description" content="Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size across JPEG, PNG, and WebP formats.">
     <meta property="twitter:image" content="https://fastimagecompression.com/og-image.jpg">
     <meta property="twitter:image:alt" content="Fast Image Compression social share image">
 
@@ -194,7 +194,7 @@
                 "url": "https://fastimagecompression.com/",
                 "applicationCategory": "PhotographyApplication",
                 "operatingSystem": "All",
-                "description": "Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size across JPEG, PNG, GIF, and WebP formats.",
+                "description": "Free online image compression tool. Compress photos, pictures, and images instantly. Reduce image size across JPEG, PNG, and WebP formats.",
                 "isAccessibleForFree": true,
                 "publisher": {
                     "@id": "https://fastimagecompression.com/#organization"
@@ -223,7 +223,7 @@
                 "name": "What image formats can I compress with this tool?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Our image compressor supports JPEG, PNG, GIF, and WebP formats. You can compress photos, pictures, graphics, and even animated GIFs. The tool automatically detects the format and applies the most effective compression method for each file type."
+                    "text": "Our image compressor supports JPEG, PNG, and WebP formats. GIF input is currently not supported because converting animated GIFs would remove their animation."
                 }
             },
             {
@@ -287,7 +287,7 @@
                 "name": "Can I compress animated GIF files?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Yes! Our GIF compressor can handle both static and animated GIF files. It reduces file size while preserving animation quality and frame timing. This is especially useful for web graphics and social media content where file size matters."
+                    "text": "Animated GIF input is currently not supported. The browser canvas conversion used by this tool would keep only the first frame, so the tool rejects GIF files instead of silently destroying animation."
                 }
             }
         ]
@@ -332,7 +332,7 @@
                         <div class="upload-content">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <h3 class="desktop-upload-message">Drop your photos, pictures, or images here</h3>
-                            <p class="desktop-upload-message">or click to browse and compress JPEG, PNG, GIF files</p>
+                            <p class="desktop-upload-message">or click to browse and compress JPEG, PNG, and WebP files</p>
                             <small class="multi-file-hint">You can select multiple images at once!</small>
                         <small class="local-processing-note"><i class="fas fa-lock"></i> Files stay in this browser. They are never sent to our server.</small>
                         </div>
@@ -383,6 +383,7 @@
                             <label for="formatSelect">Output Format:</label>
                             <select id="formatSelect">
                                 <option value="jpeg">JPEG</option>
+                                <option value="png">PNG</option>
                                 <option value="webp">WebP</option>
                                 <option value="avif">AVIF</option>
                             </select>
@@ -568,7 +569,7 @@
                     <div class="format-card">
                         <i class="fas fa-file-image"></i>
                         <h4>GIF Compressor</h4>
-                        <p>Compress GIF and animated GIF files. Minimize animated image size without losing quality.</p>
+                        <p>GIF input is currently not supported because converting animated GIFs in the browser would remove their animation.</p>
                     </div>
                     <div class="format-card">
                         <i class="fas fa-file-image"></i>
@@ -765,7 +766,7 @@
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <div class="faq-answer" id="faq-answer-2">
-                            <p>Our image compressor supports JPEG, PNG, GIF, and WebP formats. You can compress photos, pictures, graphics, and even animated GIFs. The tool automatically detects the format and applies the most effective compression method for each file type.</p>
+                            <p>Our image compressor supports JPEG, PNG, and WebP formats. GIF input is currently not supported because converting animated GIFs would remove their animation.</p>
                         </div>
                     </div>
 
@@ -845,7 +846,7 @@
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <div class="faq-answer" id="faq-answer-10">
-                            <p>Yes! Our GIF compressor can handle both static and animated GIF files. It reduces file size but will no longer preserve animation. This is especially useful for web graphics and social media content where file size matters.</p>
+                            <p>Animated GIF input is currently not supported. The browser canvas conversion used by this tool would keep only the first frame, so the tool rejects GIF files instead of silently destroying animation.</p>
                         </div>
                     </div>
                 </div>

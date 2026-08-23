@@ -14,7 +14,8 @@ const SITE_ORIGIN = 'https://fastimagecompression.com';
 const ROOT_DIR = path.resolve(process.cwd());
 
 const SKIP_FILES = new Set([
-  // Utility/system pages (none currently)
+  // Error documents are served by the host for missing routes, not indexed content.
+  '404.html',
 ]);
 
 function toIsoDate(date) {
