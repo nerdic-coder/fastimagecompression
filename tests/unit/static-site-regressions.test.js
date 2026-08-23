@@ -29,6 +29,17 @@ describe('static site regressions', () => {
     expect(privateGuide).not.toMatch(/the site does not receive the selected image/i);
   });
 
+  test('keeps production and test compressor format recommendations in sync', () => {
+    const production = fs.readFileSync(path.join(root, 'script.js'), 'utf8');
+    const testable = fs.readFileSync(path.join(root, 'script-testable.js'), 'utf8');
+
+    for (const source of [production, testable]) {
+      expect(source).toMatch(/this\.hasTransparency === false \? 'jpeg' : 'png'/);
+      expect(source).toMatch(/this\.hasTransparency = this\.detectImageTransparency\(img\)/);
+      expect(source).toMatch(/detectImageTransparency\(image\)/);
+    }
+  });
+
   test('does not claim animated GIF preservation', () => {
     const homepage = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
