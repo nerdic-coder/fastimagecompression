@@ -28,7 +28,7 @@ This is the source of truth for marketing/distribution channels. The daily marke
 | Reddit | Social/community | hold | — | — | 2026-08-23 | 2026-08-23 | No subreddit recommendation until current official rules are accessible and a specific community is verified. |
 | Sidebar | Newsletter/community | hold | — | https://sidebar.io/submit | 2026-08-22 | 2026-08-23 | Hold pending confirmation that the product meets the launch-age/prior-exposure condition. |
 | Peerlist Launchpad | Launch platform | hold | — | https://peerlist.io/launchpad | 2026-08-22 | 2026-08-23 | Requires a verified, complete profile/project; reach and any verification cost need confirmation. |
-| Launching Next | Startup/project directory | planned | — | https://www.launchingnext.com/submit/ | 2026-08-24 | 2026-08-24 | Standard submission is free; official form says daily review and email if published. Optional $99 one-business-day consideration upgrade exists; do not buy by default. Draft: `2026-08-24/launching-next.md`. |
+| Launching Next | Startup/project directory | submitted | — | https://www.launchingnext.com/submit/ | 2026-08-24 | 2026-08-24 | Submitted successfully via the free route. Confirmation says status is “In Queue (Estimated Wait: 4 Months)”. The optional $99 fast-track upgrade was not purchased. No newsletter opt-in selected. Draft: `2026-08-24/launching-next.md`. |
 | Frontend Focus | Newsletter | rejected | — | https://frontendfoc.us/submit | 2026-08-22 | 2026-08-23 | Former public submission endpoint returned 404; no transparent current route verified. |
 | Web Designer News | Community/news site | rejected | — | https://webdesignernews.com/submit-story/ | 2026-08-22 | 2026-08-23 | No usable, verifiable submission mechanics found. |
 
