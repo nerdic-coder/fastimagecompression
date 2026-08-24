@@ -7,6 +7,8 @@ describe('static site regressions', () => {
   test('service worker does not cache failed HTTP responses', () => {
     const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 
+    expect(serviceWorker).toMatch(/fast-image-compression-v3/);
+    expect(serviceWorker).toMatch(/NETWORK_FIRST_PATHS/);
     expect(serviceWorker).toMatch(/response\.ok/);
     expect(serviceWorker).toMatch(/cache\.put/);
   });
