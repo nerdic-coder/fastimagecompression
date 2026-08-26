@@ -357,6 +357,7 @@ class ImageCompressor {
         this.elements = {
             uploadArea: document.getElementById('uploadArea'),
             fileInput: document.getElementById('fileInput'),
+            errorStatus: document.getElementById('errorStatus'),
             mobileUploadButton: document.getElementById('mobileUploadButton'),
             controls: document.getElementById('controls'),
             qualitySlider: document.getElementById('qualitySlider'),
@@ -711,10 +712,16 @@ class ImageCompressor {
     processFiles(files) {
         debugLog('processFiles called with', files.length, 'files');
 
+        if (this.elements?.errorStatus) {
+            this.elements.errorStatus.textContent = '';
+        }
+
+        const rejectedFiles = [];
+
         // Filter valid image files
         const validFiles = files.filter(file => {
             if (this.isUnsupportedGif(file)) {
-                this.showError(`Skipping ${file.name}: GIF input is not supported because conversion would remove animation.`);
+                rejectedFiles.push(`Skipping ${file.name}: GIF input is not supported because conversion would remove animation.`);
                 return false;
             }
             const hasImageMimeType = file.type && file.type.startsWith('image/');
@@ -728,11 +735,11 @@ class ImageCompressor {
             });
 
             if (!hasImageMimeType && !hasImageExtension) {
-                this.showError(`Skipping ${file.name}: Not a valid image file.`);
+                rejectedFiles.push(`Skipping ${file.name}: Not a valid image file.`);
                 return false;
             }
             if (file.size > 10 * 1024 * 1024) {
-                this.showError(`Skipping ${file.name}: File size must be less than 10MB.`);
+                rejectedFiles.push(`Skipping ${file.name}: File size must be less than 10MB.`);
                 return false;
             }
             return true;
@@ -740,8 +747,14 @@ class ImageCompressor {
 
         debugLog('Valid files after filtering:', validFiles.length);
 
+        if (rejectedFiles.length > 0) {
+            const rejectionMessage = rejectedFiles.join(' ');
+            this.showError(validFiles.length === 0
+                ? `No valid image files selected. ${rejectionMessage}`
+                : rejectionMessage);
+        }
+
         if (validFiles.length === 0) {
-            this.showError('No valid image files selected.');
             return;
         }
 
@@ -1706,11 +1719,17 @@ class ImageCompressor {
     }
 
     showError(message) {
+        const errorStatus = this.elements?.errorStatus;
+        if (errorStatus) {
+            errorStatus.textContent = message;
+        }
+
         // Use requestAnimationFrame to avoid blocking main thread
         requestAnimationFrame(() => {
             // Create error notification
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-notification';
+            errorDiv.setAttribute('role', 'alert');
             errorDiv.style.cssText = `
                 position: fixed;
                 top: 20px;
