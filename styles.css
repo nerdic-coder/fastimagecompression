@@ -186,6 +186,14 @@ body {
     background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
 }
 
+.error-status {
+    min-height: 1.5em;
+    margin: 0.75rem 0 0;
+    color: #b42318;
+    font-weight: 600;
+    text-align: center;
+}
+
 .upload-content i {
     font-size: 3rem;
     color: #667eea;

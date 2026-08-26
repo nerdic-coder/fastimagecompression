@@ -246,4 +246,19 @@ describe('ImageCompressor', () => {
     expect(compressor.isUnsupportedGif({ name: 'animation.gif', type: 'image/gif' })).toBe(true);
     expect(compressor.isUnsupportedGif({ name: 'photo.png', type: 'image/png' })).toBe(false);
   });
+
+  test('should report all-invalid selections through one consolidated error', () => {
+    const compressor = new ImageCompressor();
+    compressor.showError = jest.fn();
+
+    compressor.processFiles([
+      new File(['test'], 'bad.txt', { type: 'text/plain' }),
+      new File(['test'], 'bad.bin', { type: 'application/octet-stream' })
+    ]);
+
+    expect(compressor.showError).toHaveBeenCalledTimes(1);
+    expect(compressor.showError.mock.calls[0][0]).toContain('bad.txt');
+    expect(compressor.showError.mock.calls[0][0]).toContain('bad.bin');
+    expect(compressor.showError.mock.calls[0][0]).toContain('No valid image files selected.');
+  });
 });

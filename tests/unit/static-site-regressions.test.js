@@ -42,6 +42,20 @@ describe('static site regressions', () => {
     }
   });
 
+  test('provides an accessible persistent status region for file validation errors', () => {
+    const homepage = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+    const production = fs.readFileSync(path.join(root, 'script.js'), 'utf8');
+    const testable = fs.readFileSync(path.join(root, 'script-testable.js'), 'utf8');
+
+    expect(homepage).toMatch(/id=["']errorStatus["']/);
+    expect(homepage).toMatch(/role=["']status["']/);
+    expect(homepage).toMatch(/aria-live=["']polite["']/);
+    for (const source of [production, testable]) {
+      expect(source).toMatch(/errorStatus: document\.getElementById\('errorStatus'\)/);
+      expect(source).toMatch(/errorStatus\.textContent = message/);
+    }
+  });
+
   test('does not claim animated GIF preservation', () => {
     const homepage = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
