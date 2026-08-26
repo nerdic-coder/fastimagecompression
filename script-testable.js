@@ -1,4 +1,8 @@
 // Testable ImageCompressor class extracted from script.js
+const DEBUG_LOGGING = false;
+const debugLog = (...args) => {
+    if (DEBUG_LOGGING) console.log(...args);
+};
 class ImageCompressor {
     constructor() {
         this.originalFile = null;
@@ -70,7 +74,7 @@ class ImageCompressor {
         this.isSafariIOS = isIOS && isSafari;
 
         // Debug logging
-        console.log('Mobile Detection Debug:', {
+        debugLog('Mobile Detection Debug:', {
             userAgent: userAgent,
             isIOS: isIOS,
             isSafari: isSafari,
@@ -95,7 +99,7 @@ class ImageCompressor {
         uploadArea.classList.toggle('touch-device', treatAsMobile);
         uploadArea.classList.toggle('no-touch', !treatAsMobile);
 
-        console.log('Upload area classes after toggle:', uploadArea.className);
+        debugLog('Upload area classes after toggle:', uploadArea.className);
 
         if (treatAsMobile) {
             fileInput.classList.remove('file-input-hidden');
@@ -103,7 +107,7 @@ class ImageCompressor {
             if (mobileUploadButton) {
                 mobileUploadButton.setAttribute('aria-hidden', 'false');
                 mobileUploadButton.setAttribute('tabindex', '0');
-                console.log('Mobile upload button configured for mobile');
+                debugLog('Mobile upload button configured for mobile');
             }
 
             const mobileHint = uploadArea.querySelector('.multi-file-hint');
@@ -119,7 +123,7 @@ class ImageCompressor {
             if (mobileUploadButton) {
                 mobileUploadButton.setAttribute('aria-hidden', 'true');
                 mobileUploadButton.removeAttribute('tabindex');
-                console.log('Mobile upload button configured for desktop');
+                debugLog('Mobile upload button configured for desktop');
             }
         }
 
@@ -129,7 +133,7 @@ class ImageCompressor {
             const newTreatAsMobile = isIOS || isMobileUA || hasCoarsePointer || hasTouchSupport || newIsSmallScreen;
 
             if (newTreatAsMobile !== treatAsMobile) {
-                console.log('Screen size changed, updating mobile detection');
+                debugLog('Screen size changed, updating mobile detection');
                 uploadArea.classList.toggle('touch-device', newTreatAsMobile);
                 uploadArea.classList.toggle('no-touch', !newTreatAsMobile);
             }
@@ -137,7 +141,7 @@ class ImageCompressor {
 
         // Debug: Add a test function to force show controls
         window.testShowControls = () => {
-            console.log('Testing showControls function');
+            debugLog('Testing showControls function');
             this.showControls();
         };
     }
@@ -146,7 +150,7 @@ class ImageCompressor {
         const { fileInput } = this.elements || {};
         if (!fileInput) return;
 
-        console.log('Configuring file input for:', isMobile ? 'mobile' : 'desktop');
+        debugLog('Configuring file input for:', isMobile ? 'mobile' : 'desktop');
 
         // Remove all potentially problematic attributes for both mobile and desktop
         if (typeof fileInput.removeAttribute !== 'function') return;
@@ -159,8 +163,8 @@ class ImageCompressor {
         fileInput.setAttribute('accept', 'image/*');
         fileInput.setAttribute('multiple', 'true');
 
-        console.log('File input configured - native picker will be used');
-        console.log('File input attributes after configuration:', {
+        debugLog('File input configured - native picker will be used');
+        debugLog('File input attributes after configuration:', {
             type: fileInput.getAttribute('type'),
             capture: fileInput.getAttribute('capture'),
             webkitdirectory: fileInput.getAttribute('webkitdirectory'),
@@ -179,20 +183,20 @@ class ImageCompressor {
         }
 
         if (this.isSafariIOS) {
-            console.log('Configuring format options for Safari iOS - hiding format selector');
+            debugLog('Configuring format options for Safari iOS - hiding format selector');
 
             // Hide the entire format control group for Safari iOS for safest behavior
             const formatControlGroup = formatSelect.closest('.control-group');
             if (formatControlGroup) {
                 formatControlGroup.style.display = 'none';
-                console.log('Format control group hidden for Safari iOS');
+                debugLog('Format control group hidden for Safari iOS');
             }
 
             // Ensure JPEG is selected as default
             formatSelect.value = 'jpeg';
-            console.log('Format options configured for Safari iOS - JPEG only');
+            debugLog('Format options configured for Safari iOS - JPEG only');
         } else {
-            console.log('Not Safari iOS - keeping all supported format options available');
+            debugLog('Not Safari iOS - keeping all supported format options available');
         }
     }
 
@@ -217,7 +221,7 @@ class ImageCompressor {
         support.avif = !this.isSafariIOS && canEncode('image/avif');
 
         this.supportedOutputFormats = support;
-        console.log('Detected output format support:', support);
+        debugLog('Detected output format support:', support);
         return support;
     }
 
@@ -329,7 +333,7 @@ class ImageCompressor {
         const { formatSelect } = this.elements;
 
         if (formatSelect && formatSelect.value !== recommendedFormat) {
-            console.log(`Recommending format change from ${formatSelect.value} to ${recommendedFormat} for better compression`);
+            debugLog(`Recommending format change from ${formatSelect.value} to ${recommendedFormat} for better compression`);
 
             // Update the format select
             formatSelect.value = recommendedFormat;
@@ -404,7 +408,7 @@ class ImageCompressor {
         };
 
         // Debug: Check if critical elements are found
-        console.log('Element initialization debug:', {
+        debugLog('Element initialization debug:', {
             uploadArea: !!this.elements.uploadArea,
             fileInput: !!this.elements.fileInput,
             controls: !!this.elements.controls,
@@ -452,12 +456,12 @@ class ImageCompressor {
 
             e.preventDefault();
             e.stopPropagation();
-            console.log('Upload area clicked, triggering file input');
+            debugLog('Upload area clicked, triggering file input');
 
             // Simple direct click without complex timing
             try {
                 fileInput.click();
-                console.log('File input click triggered');
+                debugLog('File input click triggered');
             } catch (error) {
                 console.error('Error triggering file input:', error);
                 this.showError('Unable to open file picker. Please try the "Choose Photos" button below.');
@@ -478,12 +482,12 @@ class ImageCompressor {
             }
             e.preventDefault();
             e.stopPropagation();
-            console.log('Upload area touched, triggering file input');
+            debugLog('Upload area touched, triggering file input');
 
             // Simple direct click for touch events
             try {
                 fileInput.click();
-                console.log('File input click triggered from touch');
+                debugLog('File input click triggered from touch');
             } catch (error) {
                 console.error('Error triggering file input from touch:', error);
                 this.showError('Unable to open file picker. Please try the "Choose Photos" button below.');
@@ -511,8 +515,8 @@ class ImageCompressor {
 
         // Add debugging for file input click
         fileInput.addEventListener('click', (e) => {
-            console.log('File input clicked directly - this should open file picker');
-            console.log('File input attributes at click time:', {
+            debugLog('File input clicked directly - this should open file picker');
+            debugLog('File input attributes at click time:', {
                 type: e.target.getAttribute('type'),
                 capture: e.target.getAttribute('capture'),
                 webkitdirectory: e.target.getAttribute('webkitdirectory'),
@@ -680,8 +684,8 @@ class ImageCompressor {
 
     handleFileSelect(e) {
         const files = Array.from(e.target.files);
-        console.log('Files selected:', files.length, 'files');
-        console.log('File input attributes:', {
+        debugLog('Files selected:', files.length, 'files');
+        debugLog('File input attributes:', {
             capture: e.target.getAttribute('capture'),
             webkitdirectory: e.target.getAttribute('webkitdirectory'),
             multiple: e.target.getAttribute('multiple'),
@@ -689,8 +693,8 @@ class ImageCompressor {
         });
 
         if (files.length > 0) {
-            console.log('File names:', files.map(f => f.name));
-            console.log('File details:', files.map(f => ({
+            debugLog('File names:', files.map(f => f.name));
+            debugLog('File details:', files.map(f => ({
                 name: f.name,
                 size: f.size,
                 type: f.type,
@@ -698,14 +702,14 @@ class ImageCompressor {
             })));
             this.processFiles(files);
         } else {
-            console.log('No files selected or files not accessible');
+            debugLog('No files selected or files not accessible');
             // Try to reset the file input for Safari iOS
             e.target.value = '';
         }
     }
 
     processFiles(files) {
-        console.log('processFiles called with', files.length, 'files');
+        debugLog('processFiles called with', files.length, 'files');
 
         // Filter valid image files
         const validFiles = files.filter(file => {
@@ -716,7 +720,7 @@ class ImageCompressor {
             const hasImageMimeType = file.type && file.type.startsWith('image/');
             const hasImageExtension = file.name ? /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(file.name) : false;
 
-            console.log(`File ${file.name}:`, {
+            debugLog(`File ${file.name}:`, {
                 type: file.type,
                 hasImageMimeType: hasImageMimeType,
                 hasImageExtension: hasImageExtension,
@@ -734,7 +738,7 @@ class ImageCompressor {
             return true;
         });
 
-        console.log('Valid files after filtering:', validFiles.length);
+        debugLog('Valid files after filtering:', validFiles.length);
 
         if (validFiles.length === 0) {
             this.showError('No valid image files selected.');
@@ -745,18 +749,18 @@ class ImageCompressor {
 
         if (validFiles.length === 1) {
             // Single file - use existing single file flow
-            console.log('Processing single file:', validFiles[0].name);
+            debugLog('Processing single file:', validFiles[0].name);
             this.originalFile = validFiles[0];
             this.processSingleFile(validFiles[0]);
         } else {
             // Multiple files - use batch processing flow
-            console.log('Processing multiple files:', validFiles.length);
+            debugLog('Processing multiple files:', validFiles.length);
             this.processMultipleFiles(validFiles);
         }
     }
 
     processSingleFile(file) {
-        console.log('processSingleFile called for:', file.name);
+        debugLog('processSingleFile called for:', file.name);
         this.showControls();
         this.showProgressSection([file]);
         this.prepareCompressButtonForImageLoad();
@@ -768,7 +772,7 @@ class ImageCompressor {
         img.crossOrigin = 'anonymous';
 
         img.onload = () => {
-            console.log('Image loaded successfully:', file.name);
+            debugLog('Image loaded successfully:', file.name);
             this.originalImage = img;
             this.hasTransparency = this.detectImageTransparency(img);
             this.updateFormatRecommendation();
@@ -787,10 +791,10 @@ class ImageCompressor {
             this.resetCompressButton();
         };
 
-        console.log('Creating object URL for image:', file.name);
+        debugLog('Creating object URL for image:', file.name);
         try {
             const objectURL = URL.createObjectURL(file);
-            console.log('Object URL created:', objectURL);
+            debugLog('Object URL created:', objectURL);
             img.src = objectURL;
         } catch (error) {
             console.error('Error creating object URL:', error);
@@ -800,14 +804,14 @@ class ImageCompressor {
     }
 
     processMultipleFiles(files) {
-        console.log('processMultipleFiles called for', files.length, 'files');
+        debugLog('processMultipleFiles called for', files.length, 'files');
         this.showControls();
         this.updateCompressButtonForBatch(files.length);
         this.showProgressSection(files);
     }
 
     showControls() {
-        console.log('showControls called');
+        debugLog('showControls called');
         const { controls, resultsSection, progressSection } = this.elements;
 
         if (!controls) {
@@ -815,7 +819,7 @@ class ImageCompressor {
             return;
         }
 
-        console.log('Showing controls, hiding results and progress sections');
+        debugLog('Showing controls, hiding results and progress sections');
         controls.style.display = 'block';
         resultsSection.style.display = 'none';
         progressSection.style.display = 'none';
@@ -825,7 +829,7 @@ class ImageCompressor {
             controls.style.transition = 'all 0.3s ease';
             controls.style.opacity = '1';
             controls.style.transform = 'translateY(0)';
-            console.log('Controls animation applied');
+            debugLog('Controls animation applied');
         });
     }
 
@@ -999,7 +1003,7 @@ class ImageCompressor {
 
             // If compression resulted in larger file, try with lower quality
             if (compressedSize >= this.originalFile.size && originalQuality > 0.3) {
-                console.log('Compression increased file size, trying lower quality...');
+                debugLog('Compression increased file size, trying lower quality...');
                 compressBtn.innerHTML = '<div class="loading"></div> Optimizing compression...';
 
                 // Try progressively lower quality settings
@@ -1010,13 +1014,13 @@ class ImageCompressor {
                     const testCompressed = await this.compressImageWithIdleCallback(this.originalImage, testQuality, format);
                     const testSize = this.getDataUrlSize(testCompressed);
 
-                    console.log(`Testing quality ${testQuality}: original=${this.originalFile.size}, compressed=${testSize}`);
+                    debugLog(`Testing quality ${testQuality}: original=${this.originalFile.size}, compressed=${testSize}`);
 
                     if (testSize < this.originalFile.size) {
                         compressedDataUrl = testCompressed;
                         compressedSize = testSize;
                         finalQuality = testQuality;
-                        console.log(`Found better compression at quality ${testQuality}`);
+                        debugLog(`Found better compression at quality ${testQuality}`);
                         break;
                     }
                 }
@@ -1213,7 +1217,7 @@ class ImageCompressor {
 
     compressImageData(image, quality, format, options = this.getCompressionOptions()) {
         return new Promise((resolve) => {
-            console.log('Starting compression:', {
+            debugLog('Starting compression:', {
                 originalWidth: image.width,
                 originalHeight: image.height,
                 quality: quality,
@@ -1249,7 +1253,7 @@ class ImageCompressor {
             };
             const requestedMimeType = mimeTypes[safeFormat] || 'image/jpeg';
 
-            console.log('Canvas dimensions:', {
+            debugLog('Canvas dimensions:', {
                 width: this.canvas.width,
                 height: this.canvas.height
             });
@@ -1265,7 +1269,7 @@ class ImageCompressor {
 
             // Calculate compressed size
             const compressedSize = this.getDataUrlSize(dataUrl);
-            console.log('Compression result:', {
+            debugLog('Compression result:', {
                 originalSize: this.originalFile ? this.originalFile.size : 'unknown',
                 compressedSize: compressedSize,
                 dataUrlLength: dataUrl.length,

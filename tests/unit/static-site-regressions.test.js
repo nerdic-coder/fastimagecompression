@@ -42,6 +42,19 @@ describe('static site regressions', () => {
     }
   });
 
+  test('keeps verbose compressor logging disabled in production and testable scripts', () => {
+    const production = fs.readFileSync(path.join(root, 'script.js'), 'utf8');
+    const testable = fs.readFileSync(path.join(root, 'script-testable.js'), 'utf8');
+
+    for (const source of [production, testable]) {
+      expect(source).toMatch(/const DEBUG_LOGGING = false;/);
+      expect(source.match(/console\.log\(/g)).toHaveLength(1);
+      expect(source).toMatch(/const debugLog = \(\.\.\.args\) =>/);
+      expect(source).toMatch(/debugLog\('Mobile Detection Debug:/);
+      expect(source).toMatch(/debugLog\('Starting compression:/);
+    }
+  });
+
   test('does not claim animated GIF preservation', () => {
     const homepage = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
