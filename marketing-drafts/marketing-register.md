@@ -33,6 +33,7 @@ This is the source of truth for marketing/distribution channels. The daily marke
 | Web Designer News | Community/news site | rejected | — | https://webdesignernews.com/submit-story/ | 2026-08-22 | 2026-08-23 | No usable, verifiable submission mechanics found. |
 | BetaList | Launch platform | hold | — | https://betalist.com/submit | 2026-08-26 | 2026-08-26 | Official site exposes a “Submit Startup” route, but it redirects to sign-in; current price, review criteria, and fit for an already-launched browser utility were not verified. Do not create an account or recommend submission yet. |
 | Dev Hunt | Developer-tool directory | rejected | — | https://devhunt.org/submit | 2026-08-26 | 2026-08-26 | Official navigation describes Dev Hunt as a launchpad for dev tools, but the public submission route returned 404 and Fast Image Compression is a general browser utility rather than a developer tool. |
+| SideProjectors | Side-project marketplace/community | hold | — | https://www.sideprojectors.com/project/submit | 2026-08-27 | 2026-08-27 | Official site describes a marketplace to sell, buy, and showcase side projects. The public route is an application shell and did not expose current listing requirements, review process, or cost without account interaction. Audience is more founders/acquirers than image-tool users; hold pending a deliberate showcase objective and manual verification. |
 
 ## Update rules
 
