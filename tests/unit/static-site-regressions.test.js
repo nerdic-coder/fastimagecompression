@@ -3,6 +3,25 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 
+const relativeLuminance = (hexColor) => {
+  const normalizedHex = hexColor.length === 4
+    ? hexColor.replace(/[a-f\d]/gi, (digit) => `${digit}${digit}`)
+    : hexColor;
+  const channels = normalizedHex.match(/[a-f\d]{2}/gi).map((channel) => parseInt(channel, 16) / 255);
+  const linearChannels = channels.map((channel) => (
+    channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4
+  ));
+
+  return (0.2126 * linearChannels[0]) + (0.7152 * linearChannels[1]) + (0.0722 * linearChannels[2]);
+};
+
+const contrastRatio = (firstColor, secondColor) => {
+  const luminances = [relativeLuminance(firstColor), relativeLuminance(secondColor)].sort((a, b) => b - a);
+  return (luminances[0] + 0.05) / (luminances[1] + 0.05);
+};
+
 describe('static site regressions', () => {
   test('service worker does not cache failed HTTP responses', () => {
     const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
@@ -74,5 +93,15 @@ describe('static site regressions', () => {
 
     expect(homepage).not.toMatch(/preserving animation quality/i);
     expect(homepage).toMatch(/animated GIF.*not supported|GIF.*static/i);
+  });
+
+  test('keeps light-theme footer headings at WCAG AA contrast', () => {
+    const styles = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+    const footerBackground = styles.match(/\.footer\s*{[^}]*background:\s*(#[a-f\d]{3,6})/i)?.[1];
+    const headingColor = styles.match(/\.footer-section h4\s*{[^}]*color:\s*(#[a-f\d]{3,6})/i)?.[1];
+
+    expect(footerBackground).toBeDefined();
+    expect(headingColor).toBeDefined();
+    expect(contrastRatio(headingColor, footerBackground)).toBeGreaterThanOrEqual(4.5);
   });
 });
