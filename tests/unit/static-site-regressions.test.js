@@ -104,4 +104,14 @@ describe('static site regressions', () => {
     expect(headingColor).toBeDefined();
     expect(contrastRatio(headingColor, footerBackground)).toBeGreaterThanOrEqual(4.5);
   });
+
+  test('keeps upload and control helper text readable in dark mode', () => {
+    const styles = fs.readFileSync(path.join(root, 'styles.css'), 'utf8');
+    const helperRule = styles.match(
+      /html\.theme-dark \.upload-content p,\s*html\.theme-dark \.privacy-badge,\s*html\.theme-dark \.local-processing-note,\s*html\.theme-dark \.metadata-result,\s*html\.theme-dark \.control-group small\s*{[^}]*color:\s*(#[a-f\d]{3,6})/i,
+    );
+
+    expect(helperRule).not.toBeNull();
+    expect(contrastRatio(helperRule[1], '#353346')).toBeGreaterThanOrEqual(4.5);
+  });
 });
