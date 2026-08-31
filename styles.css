@@ -1987,6 +1987,13 @@ html.theme-dark .batch-image-reduction {
 .inline-control { display:flex; align-items:center; gap:.5rem; }
 .inline-control input { flex:1; }
 .control-group small { display:block; color:#666; margin-top:.35rem; }
+html.theme-dark .upload-content p,
+html.theme-dark .privacy-badge,
+html.theme-dark .local-processing-note,
+html.theme-dark .metadata-result,
+html.theme-dark .control-group small {
+    color: #dfe5ff;
+}
 .comparison-panel { display:none; max-width:900px; margin:0 auto 2rem; padding:1rem; background:#fff; border-radius:15px; box-shadow:0 5px 15px rgba(0,0,0,.05); }
 .comparison-header { display:flex; justify-content:space-between; gap:1rem; margin-bottom:.75rem; color:#555; }
 .comparison-viewer { position:relative; overflow:hidden; border-radius:10px; background:#eee; line-height:0; }
