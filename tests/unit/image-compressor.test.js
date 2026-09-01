@@ -95,6 +95,37 @@ describe('ImageCompressor', () => {
     expect(compressor.isSafariIOS).toBe(true);
   });
 
+  test('should report image decode failures accurately for the current browser', () => {
+    const file = new File(['corrupt'], 'broken.png', { type: 'image/png' });
+    const OriginalImage = global.Image;
+    const decodeErrorFor = (isSafariIOS) => {
+      const compressor = new ImageCompressor();
+      compressor.isSafariIOS = isSafariIOS;
+      compressor.showControls = jest.fn();
+      compressor.showProgressSection = jest.fn();
+      compressor.prepareCompressButtonForImageLoad = jest.fn();
+      compressor.showError = jest.fn();
+      compressor.updateImageStatus = jest.fn();
+      compressor.resetCompressButton = jest.fn();
+
+      global.Image = class DecodeFailureImage {
+        set src(value) {
+          this.onerror(new Error(`Unable to decode ${value}`));
+        }
+      };
+
+      compressor.processSingleFile(file);
+      return compressor.showError.mock.calls[0][0];
+    };
+
+    try {
+      expect(decodeErrorFor(false)).toBe('This image could not be decoded. It may be corrupt or unsupported.');
+      expect(decodeErrorFor(true)).toContain('Safari iOS restrictions');
+    } finally {
+      global.Image = OriginalImage;
+    }
+  });
+
   test('should handle file validation correctly', () => {
     const compressor = new ImageCompressor();
 

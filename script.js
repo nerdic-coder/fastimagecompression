@@ -796,7 +796,10 @@ class ImageCompressor {
 
         img.onerror = (error) => {
             console.error('Failed to load image:', file.name, error);
-            this.showError(`Failed to load image "${file.name}". This might be due to Safari iOS restrictions. Please try a different image.`);
+            const decodeError = this.isSafariIOS
+                ? `Failed to load image "${file.name}". This might be due to Safari iOS restrictions. Please try a different image.`
+                : 'This image could not be decoded. It may be corrupt or unsupported.';
+            this.showError(decodeError);
             this.updateImageStatus(0, 'error', 'Load failed');
             this.originalImage = null;
             this.originalFile = null;
